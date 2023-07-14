@@ -1,0 +1,4 @@
+(executable
+ (public_name um_quint)
+ (name main)
+ (libraries um_quint))
