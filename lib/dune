@@ -1,2 +1,3 @@
 (library
- (name um_quint))
+ (name um_quint)
+ (libraries lwt))
