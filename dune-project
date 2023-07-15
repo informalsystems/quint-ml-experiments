@@ -17,6 +17,7 @@
 
   ocaml
   js_of_ocaml-compiler
+  eio_main
 
   (alcotest :with-test)
   (qcheck :with-test)
