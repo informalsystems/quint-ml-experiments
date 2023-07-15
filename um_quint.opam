@@ -11,6 +11,7 @@ depends: [
   "dune" {>= "2.9" & > "2.9"}
   "ocaml"
   "containers"
+  "ppx_deriving"
   "lwt"
   "js_of_ocaml-compiler"
   "js_of_ocaml-lwt"

@@ -17,8 +17,9 @@
 
   ocaml
 
-  ; stdlib overlay
+  ; stdlib extensions and utilities
   containers
+  ppx_deriving
 
   ; concurrency
   lwt
