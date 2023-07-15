@@ -14,7 +14,10 @@
  (description "Longer description")
  (depends
   (dune (> 2.9))
+
   ocaml
+  js_of_ocaml-compiler
+
   (alcotest :with-test)
   (qcheck :with-test)
   (qcheck-alcotest :with-test)
