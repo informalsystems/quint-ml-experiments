@@ -17,7 +17,8 @@
 
   ocaml
   js_of_ocaml-compiler
-  eio_main
+  js_of_ocaml-lwt
+  lwt
 
   (alcotest :with-test)
   (qcheck :with-test)
