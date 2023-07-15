@@ -16,11 +16,18 @@
   (dune (> 2.9))
 
   ocaml
+
+  ; stdlib overlay
+  containers
+
+  ; concurrency
+  lwt
+
+  ; JS support
   js_of_ocaml-compiler
   js_of_ocaml-lwt
-  lwt
 
   (alcotest :with-test)
   (qcheck :with-test)
   (qcheck-alcotest :with-test)
-))
+  ))

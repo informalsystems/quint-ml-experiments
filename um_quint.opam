@@ -10,9 +10,10 @@ bug-reports: "https://github.com/shonfeder/um_quint/issues"
 depends: [
   "dune" {>= "2.9" & > "2.9"}
   "ocaml"
+  "containers"
+  "lwt"
   "js_of_ocaml-compiler"
   "js_of_ocaml-lwt"
-  "lwt"
   "alcotest" {with-test}
   "qcheck" {with-test}
   "qcheck-alcotest" {with-test}
