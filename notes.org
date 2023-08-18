@@ -1,0 +1,53 @@
+#+title: Notes
+
+* Quint advantages
+
+- Really easy construction and formation of sets
+- Static detection of variable updates is very slick
+  - We need a type like ='status state= where ='status= is only =updated= after
+    every variable is =updated= where each action requires its variables to be
+    =not_updated= before access and unsures they are =updated= after.
+* PI Week 2023
+** Goals
+*** Shallow embedding of a fragment of quint
+- Ints
+- Strings
+- Sets
+- Maps
+- State vars
+- Actions
+
+**** Semantics
+
+***** Use NBE?
+- https://www.pls-lab.org/en/Normalization_by_Evaluation
+***** Support classical logic or just intuitionistic?
+- https://www.pls-lab.org/en/Classical_Curry-Howard
+- https://hal.science/inria-00371959/
+***** Just intuitionistic logic
+- https://arxiv.org/pdf/1910.00907.pdf
+- https://www.dcs.gla.ac.uk/~pmaier/papers/Maier_CSL2004_XT.pdf
+- http://www.ioc.ee/%7Ewolfgang/research/eflm-2015-slides.pdf
+****** Functional reactive system
+- The Curry–Howard Correspondence between Temporal Logic and Functional Reactive
+  Programming :: https://kodu.ut.ee/~varmo/tday-nelijarve/jeltsch-slides.pdf
+- Temporal Logic with “Until”, Functional Reactive Programming with Processes,
+  and Concrete Process Categories ::
+  https://www.ioc.ee/~wolfgang/research/plpv-2013-paper.pdf
+
+** Stretch
+
+*** Compile to QuintIR
+*** Functorization to support integration with an implementation
+*** Complete language coverage
+- Strings
+- Temporal operator
+- Sequences
+- Tuples
+- Records
+
+** Directions for future work
+*** F*
+- Take advantage of its dependant typing
+*** Rust
+- Close gap to impl
