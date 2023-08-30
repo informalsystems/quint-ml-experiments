@@ -19,7 +19,7 @@ let rec compare : type a. a t -> a t -> int =
   | Set a, Set b -> List.compare compare a b
   | Map a, Map b -> List.compare (Pair.compare compare compare) a b
 
-let rec equal : type a. a t -> a t -> bool = fun a b -> compare a b = 0
+let equal : type a. a t -> a t -> bool = fun a b -> compare a b = 0
 let int : int -> int t = fun i -> Int i
 let str : string -> string t = fun i -> Str i
 

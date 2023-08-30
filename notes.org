@@ -1,12 +1,20 @@
 #+title: Notes
-
-* Quint advantages
-
-- Really easy construction and formation of sets
-- Static detection of variable updates is very slick
-  - We need a type like ='status state= where ='status= is only =updated= after
-    every variable is =updated= where each action requires its variables to be
-    =not_updated= before access and unsures they are =updated= after.
+* Tasks
+** TODO Shallow embedding of functional fragment
+*** TODO Terms and types
+- [ ] Ints
+- [ ] Strings
+- [ ] Sets
+- [ ] Maps
+*** TODO Type checking
+*** TODO Evaluation
+** TODO Shallow embedding of stateful fragment
+*** TODO Terms and types
+- [ ] State vars
+- [ ] Actions
+*** TODO Type checking
+*** TODO Effect checking
+*** TODO Evaluation
 * PI Week 2023
 ** Goals
 *** Shallow embedding of a fragment of quint
@@ -42,12 +50,21 @@
 *** Complete language coverage
 - Strings
 - Temporal operator
-- Sequences
-- Tuples
-- Records
+- Sequences :: Use =FStar.Seq.Base=
+- Tuples :: Special case of Records
+- Records :: Probably can use DependantMap
 
 ** Directions for future work
 *** F*
 - Take advantage of its dependant typing
 *** Rust
 - Close gap to impl
+
+
+* Misc
+** Quint advantages
+- Really easy construction and formation of sets
+- Static detection of variable updates is very slick
+  - We need a type like ='status state= where ='status= is only =updated= after
+    every variable is =updated= where each action requires its variables to be
+    =not_updated= before access and unsures they are =updated= after.
