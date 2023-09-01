@@ -151,14 +151,10 @@ let product
      empty
      l1
 
-// TODO: This evals to Eq as expected, and yet the assertion fails
-// report a bug!
-let _product_ex : order =
+let _product_ex =
   let actual = product (range 0 2) (range 2 4) in
   let expected = set [0, 2; 0, 3; 0, 4; 1, 2; 1, 3; 1, 4; 2, 2; 2, 3; 2, 4] in
-  compare actual expected
-  // let result = compare actual expected in
-  // assert (result = Eq)
+  assert_norm (compare actual expected = Eq)
 
 let for_all
   #a {| ordered a |}
