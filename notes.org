@@ -60,6 +60,18 @@
 *** Rust
 - Close gap to impl
 
+* Presentation/write up
+** Influences and prior art
+** What I did
+*** State spaces as dependent maps
+#+begin_src fstar
+type map k v = | Map : key -> value:(key -> Type) -> map key value
+#+end_src
+
+** Possibilities for future
+*** State spaces as monotonic dependent maps
+Allows a monotonic property over the evolution of the state.
+
 
 * Misc
 ** Quint advantages
