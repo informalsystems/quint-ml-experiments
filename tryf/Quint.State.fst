@@ -1,5 +1,3 @@
-
-
 module Quint.State
 
 open Quint.Util
@@ -67,10 +65,6 @@ let _s = init ex_sig (function
 let _ex_init = assert_norm (is_updated _s)
 let _ex_v = assert_norm (DM.sel _s V = Some 0)
 let _ex_x = assert_norm (DM.sel _s X = Some "foo")
-
-// let _ex_acess_state = assert_norm (V@_s = 0 && X@_s = "foo")
-// let _ex_set_state : state =
-//     (V := 5) empty_state |> (X := "fee")
 // END State Example
 
 // TODO Use `DM.restrict` to limit map to just declared variables
@@ -107,13 +101,23 @@ type read {|sig|} (vs:list vars) (a:Type)
 let read_map {|sig|} #a #b #vs (f:a -> b) (x:read vs a) : read vs b
   = fun s -> f (x s)
 
-let return {|sig|} #a (x:a) : read [] a = fun _ -> x
+let pure {|sig|} #a #vs (x:a) : read vs a = fun _ -> x
 
-let (let@) {|sig|} #a #b #vs
-  (x : read vs a) (f : a -> read vs b) : read vs b
-  = fun s -> f (x s) s
+// This is what the monadic bindings would look like
+// but the read effect is only applicative!
+// let (let!) {|sig|} #a #b #vs
+//   (x : read vs a) (f : a -> read vs b) : read vs b
+//   = fun s -> f (x s) s
 
-let (and@) {|sig|} #a #b #vs #vs'
+// let (and!) {|sig|} #a #b #vs #vs'
+//   (x : read vs a) (y : read vs' b) : read (vs @ vs') (a * b)
+//   = fun s -> (x s, y s)
+
+let (let!) {|sig|} #a #b #vs
+  (x : read vs a) (f : a -> b) : read vs b
+  = fun s -> (pure #_ #_ #vs (f (x s))) s
+
+let (and!) {|sig|} #a #b #vs #vs'
   (x : read vs a) (y : read vs' b) : read (vs @ vs') (a * b)
   = fun s -> (x s, y s)
 
@@ -121,17 +125,11 @@ let ( ! ) {| sig |} (v:vars) : read [v] (types v) // s:state{is_assigned s v} ->
     =
     fun state -> Some?.v (DM.sel state v)
 
-let read_ex : read [X; V] (int * string) =
-    let@ x = !V
-    and@ v = !X
+let _read_ex : read [X; V] (int * string) =
+    let! x = !V
+    and! v = !X
     in
-    return (x, v)
-
-type action_vars {|sig|} = {
-  updated : list vars;
-  updates : list vars;
-  not_updated : list vars;
-  }
+    (x, v)
 
 /// A state predicate, i.e., an action
 ///
@@ -171,18 +169,26 @@ let ( |! ) {|sig|} #vs (a1:action_t vs) (a2:action_t vs) : action_t vs  =
   | None ->
   a2 s0
 
+let req {| sig |} #vs : read vs bool -> action_t [] =
+  fun r s0 ->
+  if r s0 then Some (fun x -> x) else None
+
+
+let transition {| sig |} = s0:state{is_updated s0} -> s1:state{is_updated s1}
+let update {|sig|} = s:state{is_fresh s} -> s1:state{is_updated s1}
+
 // TODO: need to adjust precedence so don't need to use brackets
-let _ex_conj : action_t [V; X] =
+let _ex_conj_action : action_t [V; X] =
   (  V @= 1
   &! X @= "foo"
   )
 
-let _ex_disj : action_t [V] =
+let _ex_disj_action : action_t [V] =
   (  V @= 1
   |! V @= 2
   )
 
-let _ex_comb : action_t [V; X] =
+let _ex_comb_action : action_t [V; X] =
   (  V @= 1
   &! X @= "foo"
   )
@@ -192,6 +198,18 @@ let _ex_comb : action_t [V; X] =
   )
 
 
-
-let transition {| sig |} = s0:state{is_updated s0} -> s1:state{is_updated s1}
-let update {|sig|} = s:state{is_fresh s} -> s1:state{is_updated s1}
+let _ex_req_action : action_t [V; X] =
+  (  req (let! v = !V in v > 1)
+  &! V @= 1
+  &! X @= "foo"
+  )
+  |!
+  (  req (
+      let! v = !V
+      and! x = !X
+      in
+      v < 1 && x = "foo"
+     )
+  &! V @= 10
+  &! X @= "fee"
+  )
