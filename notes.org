@@ -67,10 +67,23 @@
 #+begin_src fstar
 type map k v = | Map : key -> value:(key -> Type) -> map key value
 #+end_src
+*** Legal updates are enforced statically
+- Trying to update the same variable twice is a type error
+- Trying to read from a non-updated variable is a type error
+- Trying to update in a read effect is a type error
+*** Read effect is modeled as an applicative functor
+*** Action effect is modeled as monadic functor
+- But don't need bind, since we are only dealing with boolean values?
+*** Nondet effect is modeled as a monadic functor
+- Could be applicative, but for the possibility of setting the state mid
+  computation
 
 ** Possibilities for future
-*** State spaces as monotonic dependent maps
+*** State spaces as *monotonic* dependent maps
 Allows a monotonic property over the evolution of the state.
+*** Replace monadic interface with effect handlers
+This will allow reading from state variables without using the binding
+constructs.
 
 
 * Misc
