@@ -43,10 +43,6 @@ let upd {| sig |} (v:vars) (x:types v)
   : m:state{is_unassigned m v} -> m':state{is_assigned m' v} =
   fun m -> DM.upd m v (Some x)
 
-// let ( := ) {|sig|} = upd
-
-let transition {| sig |} = s0:state{is_updated s0} -> s1:state{is_updated s1}
-
 // START State Example
 type ex_var = | V | X
 instance ex_sig : sig = {
@@ -88,6 +84,8 @@ let state_not_has {|sig|} (s:state) (vs:list vars) =
 
 // Copied from  https://github.com/shonfeder/FStar/tree/fd0f8db6e8e254a51f0c872067004cd83d3a1f5e/ulib/FStar.List.Tot.Properties.fst
 // which has the SMTPat commented out
+// This property is necessary to automate proofs of the equivalence
+// `state_has s vs /\ state_has s vs' <==> state_has s (vs * vs')`
 val append_mem: #t:eqtype ->  l1:list t
               -> l2:list t
               -> a:t
@@ -97,24 +95,6 @@ val append_mem: #t:eqtype ->  l1:list t
 let rec append_mem #t l1 l2 a = match l1 with
   | [] -> ()
   | hd::tl -> append_mem tl l2 a
-
-let state_concat_has_both {|sig|} (vs vs': list vars) (s:state{state_has s (vs @ vs')})
-    : Lemma (state_has s vs /\ state_has s vs')
-    = ()
-
-let state_concat_is_concat_ls {|sig|} (vss vs vs': list vars) (s:state)
-    : Lemma (vss == vs @ vs' ==> state_has s vss == state_has s (vs @ vs'))
-    = ()
-
-// let rec state_concat_has_both {|sig|}
-//  (vs vs':list vars) (s:state)
-//  : Lemma (state_has s (vs @ vs') ==> state_has s vs /\ state_has s vs')
-//  = match vs with
-//  | [] -> List.append_nil_l vs'; assert (state_has s vs')
-//  | x :: xs -> assert (is_assigned s x); state_concat_has_both xs vs'
-
-// let state_has_both {|sig|} (s:state) vs vs' =
-//  state_has s vs && state_has s vs'
 
 /// the type of computations that
 ///
@@ -165,18 +145,6 @@ type action_t {|sig|} (vs:list vars)
       -> s1:state{state_has s1 vs /\ (forall v. (not (mem v vs)) ==> DM.sel s1 v == DM.sel s v)}
     )
 
-// /// A state predicate, i.e., an action
-// ///
-// /// - `s0` is the current state
-// /// - `s` is the intermediate state to be updated (lets us ensure no state is updated twice)
-// /// - `s1` is the next state specified by by the action
-// type action_t {|sig|} (vs:action_vars)
-//   = s0:state -> option (s:state{state_has s vs.updated /\ state_not_has s (vs.updates @ vs.not_updated)} -> s1:state{state_has s1 (vs.updated @ vs.updates) /\ state_not_has s1 vs.not_updated})
-
-// let upd' {| sig |} (v:vars) (x:types v) updated not_updated
-//   : s:state{state_has s updated /\ state_not_has s ([v] @ not_updated)} -> s':state{state_has s ([v] @ updated) /\ state_not_has s not_updated} =
-//   fun m -> DM.upd m v (Some x)
-
 let ( @= ) {|sig|} (v:vars) (x:types v) : action_t [v]
   = fun _ -> Some (fun s -> upd v x s)
 
@@ -225,59 +193,5 @@ let _ex_comb : action_t [V; X] =
 
 
 
-// let all {|sig|} : action j -> state -> option state =
-
-// Like return, but we don't have values to return
-let enact {|sig|} : action = fun s -> [], s
-
-let (let!) {|sig|} #a
-  (x: action) (f: action)
-  : action
-  = fun s ->
-    let cs, s' = x s in
-    let cs', s'' = f s' in
-    (cs @ cs', s'')
-
-
-
-// TODO: Add support for _next_ state
-// TODO: A monad that will build up a series of constraints (requirements) and a state_update.
-// A transition is enabled if all the constraints
-// TODO: Add a boolean to state, indicating whether the action was enabled,
-// TODO: State is actual relating this state and next state, updates go to next state, reads from this state
-
-type time a =
-  { trace: list a
-  ; t0 : a
-  ; t1 : option a
-  }
-
-let st s c = time s -> c & time s
-
-let now #s : st s s
-  = fun time -> time.t0, time
-
-let update #a (u:a -> a) : st a unit
-  = fun t -> (), {t with t1 = Some (u t.t0)}
-
-let bind
-  #s #a #b
-  (f: st s a) (g: a -> st s b)
-  = fun s0 ->
-    let x, s1 = f s0 in
-    g x s1
-
-let return #s #c (x:c)
-  : st s c
-  = fun t -> x, t
-
-let (let!) = bind
-
-type s = {a : int; b : string}
-
-let _ex_computation : st s bool =
-  let! t = now in
-  let! () = update (fun s -> {s with a = s.a + 1}) in
-  return true
-
-let _ex_eval = _ex_computation {trace = []; t0 = {a = 0; b = "foo"}; t1 = None}
+let transition {| sig |} = s0:state{is_updated s0} -> s1:state{is_updated s1}
+let update {|sig|} = s:state{is_fresh s} -> s1:state{is_updated s1}
