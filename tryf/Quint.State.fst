@@ -1,5 +1,6 @@
-
 module Quint.State
+
+open FStar.Tactics.Typeclasses
 
 open Quint.Util
 open Quint.Ordered
@@ -11,6 +12,7 @@ module Set = Quint.Set
 
 open List
 
+/// State signature
 class sig = {
    /// `vars` is the set of "flexible variables"
    vars:eqtype;
@@ -20,7 +22,6 @@ class sig = {
 
 let optional #k : (k -> Type) -> k -> Type =
   fun f v -> option (f v)
-
 
 let state {| sig |} = DM.t vars (optional types)
 
@@ -141,21 +142,21 @@ let _read_ex : read [X; V] (int * string) =
 /// - `s0` is the current state
 /// - `s` is the intermediate state to be updated (lets us ensure no state is updated twice)
 /// - `s1` is the next state specified by by the action
-type action_t {|sig|} (vs:list vars)
+type action {|sig|} (vs:list vars)
   = s0:state{is_updated s0}
     -> option (
       s:state{state_not_has s vs}
       -> s1:state{state_has s1 vs /\ (forall v. (not (mem v vs)) ==> DM.sel s1 v == DM.sel s v)}
     )
 
-let ( @= ) {|sig|} (v:vars) (x:types v) : action_t [v]
+let ( @= ) {|sig|} (v:vars) (x:types v) : action [v]
   = fun _ -> Some (fun s -> upd v x s)
 
 /// Conjunction is the composition of actions
 let ( &! ) {|sig|} #vs #vs'
-  (a1:action_t vs)
-  (a2:action_t vs'{forall v. mem v vs' ==> not (mem v vs)}) // a2 cannot update the same vars as a1
-  : action_t (vs @ vs') // ther
+  (a1:action vs)
+  (a2:action vs'{forall v. mem v vs' ==> not (mem v vs)}) // a2 cannot update the same vars as a1
+  : action (vs @ vs') // ther
   =
   fun s0 ->
   match a1 s0 with
@@ -167,14 +168,14 @@ let ( &! ) {|sig|} #vs #vs'
   Some (fun (s:state{state_not_has s (vs @ vs')}) -> (upd2 (upd1 s)))
 
 // TODO Add non-det
-let ( |! ) {|sig|} #vs (a1:action_t vs) (a2:action_t vs) : action_t vs  =
+let ( |! ) {|sig|} #vs (a1:action vs) (a2:action vs) : action vs  =
   fun s0 ->
   match a1 s0 with
   | Some upd1 -> Some upd1
   | None ->
   a2 s0
 
-let req {| sig |} #vs : read vs bool -> action_t [] =
+let req {| sig |} #vs : read vs bool -> action [] =
   fun r s0 ->
   if r s0 then Some (fun x -> x) else None
 
@@ -183,17 +184,17 @@ let transition {| sig |} = s0:state{is_updated s0} -> s1:state{is_updated s1}
 let update {|sig|} = s:state{is_fresh s} -> s1:state{is_updated s1}
 
 // TODO: need to adjust precedence so don't need to use brackets
-let _ex_conj_action : action_t [V; X] =
+let _ex_conj_action : action [V; X] =
   (  V @= 1
   &! X @= "foo"
   )
 
-let _ex_disj_action : action_t [V] =
+let _ex_disj_action : action [V] =
   (  V @= 1
   |! V @= 2
   )
 
-let _ex_comb_action : action_t [V; X] =
+let _ex_comb_action : action [V; X] =
   (  V @= 1
   &! X @= "foo"
   )
@@ -203,7 +204,7 @@ let _ex_comb_action : action_t [V; X] =
   )
 
 
-let _ex_req_action : action_t [V; X] =
+let _ex_req_action : action [V; X] =
   (  req (let! v = !V in v > 1)
   &! V @= 1
   &! X @= "foo"
@@ -219,6 +220,23 @@ let _ex_req_action : action_t [V; X] =
   &! X @= "fee"
   )
 
+open Rng
 type nondet (a:Type) = Rng.t a
+let run = run
+let (let?) = (let?)
+
 let one_of #a {|ordered a|} (s:Set.non_empty a) : nondet a =
   Rng.rand_choice s.ls
+
+let _ex_nondet_action : nondet (action [V; X]) =
+    let? a = one_of (Set.set[1;2;3])
+    and? b = one_of (Set.set["a"; "b"; "c"])
+    in
+    (  req (
+        let! v = !V
+        and! x = !X
+        in
+        v > a && x = "a" )
+    &! V @= a
+    &! X @= b
+    )

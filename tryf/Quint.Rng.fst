@@ -51,10 +51,16 @@ let rec rand_aux (s : state) (input:nat{input > 0}) (output base:int)
 
 let return #a (x:a): t a = fun s -> (x, s)
 
-let (let?) #a #b (rng:t a) (f: a -> t b): t b=
+let (let?) #a #b (rng:t a) (f: a -> b): t b=
   fun s ->
     let r, s' = rng s in
-    (f r) s'
+    return (f r) s'
+
+let (and?) #a #b (r1:t a) (r2: t b): t (a & b) =
+  fun s ->
+    let x1, s' = r1 s in
+    let x2, s'' = r2 s' in
+    return (x1, x2) s''
 
 let init (s:nat): state = Rn (s % u64)
 
@@ -69,64 +75,64 @@ let rand_nat (bound:nat{bound  > 0}): t (n:nat{n >= 0 /\ n < bound}) =
 
 let rand_bool : t bool =
   let? n = rand_nat 2 in
-  return (
-     if n < 1 then true else false
-  )
+  if n < 1 then true else false
 
 let rand_choice #a (l : list a{List.length l > 0}) : t a =
   let len = List.length l in
   let? idx = rand_nat len in
   // XXX Bounds property is unproven! (But we know it holds)
   assume (idx >= 0 /\ idx < len);
-  return (List.index l idx)
+  (List.index l idx)
 
-let run #a (s:state) (f:t a): a =
-  let r, _ = f s in
+let run #a (n:nat{n >= 0}) (f:t a): a =
+  let r, _ = f (init n)  in
   r
 
 let _ex_rand_nat =
   let cmp =
-    let? w = rand_nat 2 in
-    let? x = rand_nat 2 in
-    let? y = rand_nat 10 in
-    let? z = rand_nat 100 in
-    return (w, x, y, z)
+    let? w = rand_nat 2
+    and? x = rand_nat 2
+    and? y = rand_nat 10
+    and? z = rand_nat 100
+    in
+    (w, x, y, z)
   in
-  assert_norm (run (init 0) cmp = (0, 1, 4, 75));
+  assert_norm (run 0 cmp = (0, 1, 4, 75));
   let cmp' =
-    let? w = rand_nat 2 in
-    let? x = rand_nat 2 in
-    let? y = rand_nat 10 in
-    let? z = rand_nat 100 in
-    return (w, x, y, z)
+    let? w = rand_nat 2
+    and? x = rand_nat 2
+    and? y = rand_nat 10
+    and? z = rand_nat 100
+    in
+    (w, x, y, z)
   in
   // The same computation performed with the same seed is the same
-  assert_norm (run (init 0) cmp = run (init 0) cmp');
+  assert_norm (run 0 cmp = run 0 cmp');
   // The same computation performed with a different seed is different
-  assert_norm (run (init 0) cmp =!= run (init 1) cmp')
+  assert_norm (run 0 cmp =!= run 1 cmp')
 
 let _ex_rand_bool =
   assert_norm (
-    run (init 0) (
-      let? b1 = rand_bool in
-      let? b2 = rand_bool in
-      let? b3 = rand_bool in
-      return (b1, b2, b3)
-    )
+    run 0 (
+      let? b1 = rand_bool
+      and? b2 = rand_bool
+      and? b3 = rand_bool
+      in
+      (b1, b2, b3))
     =
     (true, false, true)
   )
 
 let _ex_rand_choice =
- let l = [1;2;3;4;5] in
- assert_norm (
-  run (init 0) (
-      let? a = rand_choice l in
-      let? b = rand_choice l in
-      let? c = rand_choice l in
-      let? d = rand_choice l in
-      return (a, b, c, d)
+  let l = [1;2;3;4;5] in
+  assert_norm (
+    run 0 (
+      let? a = rand_choice l
+      and? b = rand_choice l
+      and? c = rand_choice l
+      and? d = rand_choice l
+      in
+      (a, b, c, d))
+    =
+    (4, 5, 5, 1)
   )
-  =
-  (4, 5, 5, 1)
- )

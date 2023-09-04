@@ -3,18 +3,11 @@ module Quint.State
 
 open FStar.List.Tot
 open Quint.Rng
+open FStar.Tactics.Typeclasses
 
-
-
+[@tcclass]
+noeq type sig = {vars:eqtype; types: vars -> Type}
 /// # State
-
-/// State signature
-class sig = {
-   /// `vars` is the set of "flexible variables"
-   vars:eqtype;
-   /// `types` maps each variable to the types of the values it can be assigned
-   types: vars -> Type
-}
 
 /// A state defined by a signature `sig`
 val state {| sig |} : Type
@@ -105,5 +98,21 @@ let run = run
 /// Nondeterministically select a value of type `a` from a non-empty set
 val one_of #a {|ordered a|} : Set.non_empty a -> nondet a
 
-/// Bind a value in a nondet context
+/// Bind values in nondet contexts
+///
+/// ```
+/// let ex : nondet (action [V; X]) =
+///   let? a = one_of (set[1;2;3])
+///   and? b = one_of (set["a"; "b"; "c"])
+///   in
+///   (  req (
+///        let! v = !V
+///        and! x = !X
+///        in
+///        v > a && x = "a" )
+///   &! V @= a
+///   &! X @= b
+///   )
+/// ```
 let (let?) = (let?)
+let (and?) = (and?)

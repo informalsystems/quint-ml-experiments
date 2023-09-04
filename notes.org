@@ -74,9 +74,7 @@ type map k v = | Map : key -> value:(key -> Type) -> map key value
 *** Read effect is modeled as an applicative functor
 *** Action effect is modeled as monadic functor
 - But don't need bind, since we are only dealing with boolean values
-*** Nondet effect is modeled as a monadic functor
-- Could be applicative, but for the possibility of setting the state mid
-  computation
+*** Nondet effect is modeled as an applicative functor
 *** RNG library ported from the quint impl
 *** A naive type-class based set library allowing light weight operations over nested sets
 *** A naive type-class based non-dependent map library allowing light weight operations over nested maps
