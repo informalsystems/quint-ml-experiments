@@ -1,9 +1,14 @@
+
 module Quint.State
 
 open Quint.Util
+open Quint.Ordered
 
 module DM = FStar.DependentMap
 module List = FStar.List.Tot
+module Rng = Quint.Rng
+module Set = Quint.Set
+
 open List
 
 class sig = {
@@ -213,3 +218,7 @@ let _ex_req_action : action_t [V; X] =
   &! V @= 10
   &! X @= "fee"
   )
+
+type nondet (a:Type) = Rng.t a
+let one_of #a {|ordered a|} (s:Set.non_empty a) : nondet a =
+  Rng.rand_choice s.ls

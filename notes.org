@@ -62,7 +62,7 @@
 
 * Presentation/write up
 ** Influences and prior art
-** What I did
+** What got done
 *** State spaces as dependent maps
 #+begin_src fstar
 type map k v = | Map : key -> value:(key -> Type) -> map key value
@@ -73,10 +73,13 @@ type map k v = | Map : key -> value:(key -> Type) -> map key value
 - Trying to update in a read effect is a type error
 *** Read effect is modeled as an applicative functor
 *** Action effect is modeled as monadic functor
-- But don't need bind, since we are only dealing with boolean values?
+- But don't need bind, since we are only dealing with boolean values
 *** Nondet effect is modeled as a monadic functor
 - Could be applicative, but for the possibility of setting the state mid
   computation
+*** RNG library ported from the quint impl
+*** A naive type-class based set library allowing light weight operations over nested sets
+*** A naive type-class based non-dependent map library allowing light weight operations over nested maps
 
 ** Possibilities for future
 *** State spaces as *monotonic* dependent maps

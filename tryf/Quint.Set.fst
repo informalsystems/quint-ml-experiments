@@ -100,7 +100,8 @@ let rec sort #a {| ordered a |} : l:list a -> Tot (list a) (decreases (length l)
     let ys = drop n ls in
     merge (sort xs) (sort ys)
 
-type t a  = | Set: list a -> t a // TODO {sorted l}
+type t a  = | Set: ls:list a -> t a // TODO {sorted l}
+type non_empty a = s:t a{length s.ls > 0}
 
 let compare_sets #a {| ordered a |} (Set s1 : t a) (Set s2 : t a) =
   compare_lists s1 s2
