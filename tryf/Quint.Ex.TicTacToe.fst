@@ -1,3 +1,4 @@
+
 module Quint.Ex.TicTacToe
 
 open FStar.Order
@@ -49,29 +50,52 @@ let corners : Set.t coord =
       ; 3,3
       ]
 
-let is_occupied_by_player
-  (b:board) (c:coord) (p:player)
-  : bool
-  = match Map.get c b with
+let is_occupied_by_player (b:board) (p:player) (c:coord) : bool =
+  match Map.get c b with
   | None    -> false
   | Some p' -> p = p'
 
-let is_empty
-  (c:coord) (b:board)
-  : bool
-  = Map.get c b |> None?
+let is_empty (b:board) (c:coord) : bool =
+  Map.get c b |> None?
 
-let next_turn_is
-  (p:player) (s:state)
-  : bool
-  = s.next_turn = p
+let next_turn_is (p:player) (s:state) : bool =
+  s.next_turn = p
 
-let board_is_empty
-  (b:board)
-  : bool
-  = b = Set.empty
+let board_is_empty (b:board) : bool = b =
+  Set.empty
 
-let has_won
-  (p:player) (b:board)
-  : bool
-  =
+let has_won (p:player) (b:board) : bool =
+  winning_patterns |> Set.for_some (Set.for_all (is_occupied_by_player b p))
+
+let board_is_full (b:board) : bool =
+  Set.size b = Set.size board_coordinates
+
+let at_stalemate (b:board) : bool =
+  board_is_full b && not (has_won X b || has_won O b)
+
+let game_over (b:board) : bool =
+  has_won X b || has_won O b || board_is_full b
+
+let x_can_win_with_pattern (b:board) (pattern:Set.t coord) : bool =
+  let occupied_by_X, rest = pattern |> Set.partition (is_occupied_by_player b X) in
+  Set.size occupied_by_X = 2
+  &&
+  Set.for_all (is_empty b) rest
+
+let x_can_block_with_pattern (b:board) (pattern:Set.t coord) : bool =
+  let occupied_by_O, rest = pattern |> Set.partition (is_occupied_by_player b O) in
+  Set.size occupied_by_O = 2
+  &&
+  (* Rest must be a singleton set *)
+  Set.for_all (is_empty b) rest
+
+let x_can_set_up_win_with_pattern (b:board) (pattern:Set.t coord) : bool =
+  let occupied_by_X, rest = pattern |> Set.partition (is_occupied_by_player b X) in
+  Set.size occupied_by_X = 1
+  &&
+  Set.for_all (is_empty b) rest
+
+let x_can_win (b:board) = winning_patterns |> Set.for_some (x_can_win_with_pattern b)
+let x_can_block (b:board) = winning_patterns |> Set.for_some (x_can_block_with_pattern b)
+let can_take_center (b:board) = is_empty b (2,2)
+let x_can_set_up_win (b:board) = winning_patterns |> Set.for_some (x_can_set_up_win_with_pattern b)
