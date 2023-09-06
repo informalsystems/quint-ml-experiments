@@ -1,0 +1,14 @@
+#+title: Experiments in Quint ML
+
+This repo holds some experiments focused on or around [[https://github.com/informalsystems/quint][quint]] and conducted in the
+MLs [[https://en.wikipedia.org/wiki/OCaml][OCaml]] and [[https://www.fstar-lang.org/][F*]].
+
+Everything in here is very rough and a WIP.
+
+* Contents
+
+- [[./tryf/]] :: A EDSL aiming to capture a fragment of quint in F*.
+- [[./lib]] :: Sketch towards a shallow embedding of Quint in OCaml. It only
+  holds a GADT of terms.
+- [[./bin/main.ml]] :: A sketch of an OCaml approach to a toy quint spec.
+- [[./notes.org]] :: Notes on the project
