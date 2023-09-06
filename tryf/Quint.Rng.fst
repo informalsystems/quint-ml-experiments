@@ -1,3 +1,4 @@
+
 module Quint.Rng
 
 open FStar.Mul
@@ -6,17 +7,17 @@ module List = FStar.List.Tot
 // An RNG adapted from https://raw.githubusercontent.com/informalsystems/quint/main/quint/src/rng.ts
 // with all the shortcomings and basis of that impl
 
-type state = | Rn : v:int -> state
+type rng_state = | Rn : v:int -> rng_state
 
-// TODO, add a method to access the state?
-type t a = state -> a & state
+// TODO, add a method to access the rng_state?
+type t a = rng_state -> a & rng_state
 
 let u32 = 0x100000000
 let u64 = 0x10000000000000000
 
 let key = 0xfb9e125878fa6cb3
 
-let squares64 (s:state): nat =
+let squares64 (s:rng_state): nat =
   let x = (s.v * key) % u64 in
   let y = x in
   let z = (y + key) % u64 in
@@ -32,8 +33,8 @@ let squares64 (s:state): nat =
   ((((x * x) % u64) + z) % u64) / u32
 
 
-let rec rand_aux (s : state) (input:nat{input > 0}) (output base:int)
-  : Tot (int & state)
+let rec rand_aux (s : rng_state) (input:nat{input > 0}) (output base:int)
+  : Tot (int & rng_state)
         (decreases input)
   =
   if input >= u32 then
@@ -45,8 +46,8 @@ let rec rand_aux (s : state) (input:nat{input > 0}) (output base:int)
   else
     // TODO Check quint lib to see of it breaks when range is 0
     let output' = (squares64(s) % input) * base + output in
-    let state' = Rn ((s.v + 1) % u64) in
-    output', state'
+    let rng_state' = Rn ((s.v + 1) % u64) in
+    output', rng_state'
 
 
 let return #a (x:a): t a = fun s -> (x, s)
@@ -62,13 +63,13 @@ let (and?) #a #b (r1:t a) (r2: t b): t (a & b) =
     let x2, s'' = r2 s' in
     return (x1, x2) s''
 
-let init (s:nat): state = Rn (s % u64)
+let init (s:nat): rng_state = Rn (s % u64)
 
 // TODO: Prove boundary property
 /// [rand_int n] is a random nat `i` `0 <= i < n`
 let rand_nat (bound:nat{bound  > 0}): t (n:nat{n >= 0 /\ n < bound}) =
-  fun state ->
-  let n, s = rand_aux state bound 0 1 in
+  fun rng_state ->
+  let n, s = rand_aux rng_state bound 0 1 in
   // XXX Bounds property is unproven! (But we know it holds)
   assume (n >= 0 /\ n < bound);
   n, s

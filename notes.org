@@ -2,10 +2,10 @@
 * Tasks
 ** TODO Shallow embedding of functional fragment
 *** TODO Terms and types
-- [ ] Ints
-- [ ] Strings
-- [ ] Sets
-- [ ] Maps
+- [x] Ints
+- [x] Strings
+- [x] Sets
+- [x] Maps
 *** TODO Type checking
 *** TODO Evaluation
 ** TODO Shallow embedding of stateful fragment

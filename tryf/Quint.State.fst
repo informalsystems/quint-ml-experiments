@@ -1,41 +1,19 @@
 module Quint.State
 
 open FStar.Tactics.Typeclasses
+open FStar.List.Tot
 
 open Quint.Util
 open Quint.Ordered
+open Quint.State.Sig
 
 module DM = FStar.DependentMap
 module List = FStar.List.Tot
 module Rng = Quint.Rng
 module Set = Quint.Set
 
-open List
-
-/// State signature
-class sig = {
-   /// `vars` is the set of "flexible variables"
-   vars:eqtype;
-   /// `types` maps each variable to the types of the values it can be assigned
-   types: vars -> Type
-}
-
-let optional #k : (k -> Type) -> k -> Type =
-  fun f v -> option (f v)
-
-let state {| sig |} = DM.t vars (optional types)
-
-let is_assigned {| sig |} (m:state) k = Some? (DM.sel m k)
-let is_unassigned {| sig |} (m:state) k = None? (DM.sel m k)
-
-let is_fresh {| sig |} (m:state) = forall k. is_unassigned m k
-
-let is_updated {| sig |} (m:state) = forall k. is_assigned m k
-
 let init_opt {| sig |}: f:(v:vars -> types v) -> v':vars -> option (types v') =
   fun init variable -> Some (init variable)
-
-type init_t {| sig |} = v:vars -> types v
 
 let init (s:sig) (f:init_t) : state = DM.create (init_opt f)
 
@@ -76,12 +54,6 @@ let _ex_x = assert_norm (DM.sel _s X = Some "foo")
 // TODO Use `DM.restrict` to limit map to just declared variables
 // A computation of `a` that can read from `state #sig`
 
-let state_has {|sig|} (s:state) (vs:list vars) =
-    forall v. mem v vs ==> is_assigned s v
-
-let state_not_has {|sig|} (s:state) (vs:list vars) =
-    forall v. mem v vs ==> is_unassigned s v
-
 // Copied from  https://github.com/shonfeder/FStar/tree/fd0f8db6e8e254a51f0c872067004cd83d3a1f5e/ulib/FStar.List.Tot.Properties.fst
 // which has the SMTPat commented out
 // This property is necessary to automate proofs of the equivalence
@@ -95,14 +67,6 @@ val append_mem: #t:eqtype ->  l1:list t
 let rec append_mem #t l1 l2 a = match l1 with
   | [] -> ()
   | hd::tl -> append_mem tl l2 a
-
-/// the type of computations that
-///
-/// - read from a state with signature `sig`
-/// - read the variables in `vs` (so all `v` in `vs` must be assigned)
-/// - produces a vlue of type `a`
-type read {|sig|} (vs:list vars) (a:Type)
-  = s:state{state_has s vs} -> a
 
 let read_map {|sig|} #a #b #vs (f:a -> b) (x:read vs a) : read vs b
   = fun s -> f (x s)
@@ -119,6 +83,10 @@ let pure {|sig|} #a #vs (x:a) : read vs a = fun _ -> x
 //   (x : read vs a) (y : read vs' b) : read (vs @ vs') (a * b)
 //   = fun s -> (x s, y s)
 
+let ( ! ) {| sig |} (v:vars) : read [v] (types v) // s:state{is_assigned s v} -> types v
+    =
+    fun state -> Some?.v (DM.sel state v)
+
 let (let!) {|sig|} #a #b #vs
   (x : read vs a) (f : a -> b) : read vs b
   = fun s -> (pure #_ #_ #vs (f (x s))) s
@@ -127,27 +95,16 @@ let (and!) {|sig|} #a #b #vs #vs'
   (x : read vs a) (y : read vs' b) : read (vs @ vs') (a * b)
   = fun s -> (x s, y s)
 
-let ( ! ) {| sig |} (v:vars) : read [v] (types v) // s:state{is_assigned s v} -> types v
-    =
-    fun state -> Some?.v (DM.sel state v)
-
 let _read_ex : read [X; V] (int * string) =
     let! x = !V
     and! v = !X
     in
     (x, v)
 
-/// A state predicate, i.e., an action
-///
-/// - `s0` is the current state
-/// - `s` is the intermediate state to be updated (lets us ensure no state is updated twice)
-/// - `s1` is the next state specified by by the action
-type action {|sig|} (vs:list vars)
-  = s0:state{is_updated s0}
-    -> option (
-      s:state{state_not_has s vs}
-      -> s1:state{state_has s1 vs /\ (forall v. (not (mem v vs)) ==> DM.sel s1 v == DM.sel s v)}
-    )
+let req {| sig |} #vs : read vs bool -> action [] =
+  fun r s0 ->
+  if r s0 then Some (fun x -> x) else None
+
 
 let ( @= ) {|sig|} (v:vars) (x:types v) : action [v]
   = fun _ -> Some (fun s -> upd v x s)
@@ -175,13 +132,6 @@ let ( |! ) {|sig|} #vs (a1:action vs) (a2:action vs) : action vs  =
   | None ->
   a2 s0
 
-let req {| sig |} #vs : read vs bool -> action [] =
-  fun r s0 ->
-  if r s0 then Some (fun x -> x) else None
-
-
-let transition {| sig |} = s0:state{is_updated s0} -> s1:state{is_updated s1}
-let update {|sig|} = s:state{is_fresh s} -> s1:state{is_updated s1}
 
 // TODO: need to adjust precedence so don't need to use brackets
 let _ex_conj_action : action [V; X] =
@@ -204,6 +154,8 @@ let _ex_comb_action : action [V; X] =
   )
 
 
+// let run_n_steps {|sig|} (n:int) (init:state): nondet action =
+
 let _ex_req_action : action [V; X] =
   (  req (let! v = !V in v > 1)
   &! V @= 1
@@ -220,23 +172,18 @@ let _ex_req_action : action [V; X] =
   &! X @= "fee"
   )
 
-open Rng
-type nondet (a:Type) = Rng.t a
-let run = run
-let (let?) = (let?)
-
 let one_of #a {|ordered a|} (s:Set.non_empty a) : nondet a =
   Rng.rand_choice s.ls
 
-let _ex_nondet_action : nondet (action [V; X]) =
-    let? a = one_of (Set.set[1;2;3])
-    and? b = one_of (Set.set["a"; "b"; "c"])
-    in
-    (  req (
-        let! v = !V
-        and! x = !X
-        in
-        v > a && x = "a" )
-    &! V @= a
-    &! X @= b
-    )
+// let _ex_nondet_action : nondet (action [V; X]) =
+//     let? a = one_of (Set.set[1;2;3])
+//     and? b = one_of (Set.set["a"; "b"; "c"])
+//     in
+//     (  req (
+//         let! v = !V
+//         and! x = !X
+//         in
+//         v >= a && x = "a" )
+//     &! V @= a
+//     &! X @= b
+//     )
