@@ -1,7 +1,7 @@
-
 module Quint.Ordered
 
 open FStar.Order
+module String = FStar.String
 
 class ordered (a:Type) = {
   compare : a -> a -> order;
@@ -12,6 +12,13 @@ class ordered (a:Type) = {
 instance ordered_int : ordered int = {
   compare = compare_int;
   // properties = fun () -> ()
+}
+
+let compare_string (s1 s2: string): order =
+  order_from_int (String.compare s1 s2)
+
+instance ordered_string : ordered string = {
+  compare = compare_string
 }
 
 instance ordered_nat : ordered nat = {
