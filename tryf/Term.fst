@@ -1,7 +1,7 @@
 module Term
 
-open Quint.Set
-open Quint.Map
+module Set = Quint.Set
+module Map = Quint.Map
 
 let ( |> ) x f = f x
 
@@ -16,8 +16,8 @@ let rec denote_type
   : typ -> Type = function
   | Int -> int
   | Str -> string
-  | Set t       -> set_t (denote_type t)
-  | Map k v     -> map (denote_type k) (denote_type v)
+  | Set t       -> Set.t (denote_type t)
+  | Map k v     -> Map.t (denote_type k) (denote_type v)
   | Opr src tgt -> (denote_type src) -> (denote_type tgt)
 
 // TODO: How to enforce that operators cannot be values? Or do we just allow it?

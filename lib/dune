@@ -1,3 +1,3 @@
 (library
  (name um_quint)
- (libraries lwt containers))
+ (libraries lwt containers lang))
