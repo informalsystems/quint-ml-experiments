@@ -135,7 +135,7 @@ let ( |! ) {|sig|} #vs (a1:action vs) (a2:action vs) : action vs  =
 
 
 // A transition is an action that updates all the variables
-type transition {|sig|} #vs = a:action vs{(forall v. mem v vs)}
+type transition {|sig|} #vs = a:action vs{(forall (v : vars). mem v vs)}
 
 // TODO: need to adjust precedence so don't need to use brackets
 let _ex_conj_action : transition =
@@ -191,3 +191,17 @@ let _ex_nondet_action : nondet transition
     &! V @= vr
     &! X @= xr
     )
+
+// TODO: We need to prove that applying a transition produces an updated state
+let apply {|s:sig|} #vs
+  (t:nondet (transition #s #vs))
+  (s0:state{is_updated s0})
+  : nondet (option (s1:state{state_has s1 vs}))
+   =
+  let? t = t in
+  match t s0 with
+  | None -> None
+  | Some update ->
+  let s = update (empty_state #s) in
+  // assume (is_updated s);
+  Some s

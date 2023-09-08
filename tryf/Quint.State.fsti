@@ -32,8 +32,8 @@ val init : sig -> init_t -> state
 /// Predicates over states
 let is_assigned {| sig |} (m:state) k = Some? (DM.sel m k)
 let is_unassigned {| sig |} (m:state) k = None? (DM.sel m k)
-let is_fresh {| sig |} (m:state) = forall k. is_unassigned m k
-let is_updated {| sig |} (m:state) = forall k. is_assigned m k
+let is_fresh {| sig |} (m:state) = forall (v:vars). is_unassigned m v
+let is_updated {| sig |} (m:state) = forall (v:vars). is_assigned m v
 
 /// # State functions: the *read* effect
 
@@ -45,6 +45,14 @@ let state_has {|sig|} (s:state) (vs:list vars) =
 
 let state_not_has {|sig|} (s:state) (vs:list vars) =
     forall v. mem v vs ==> is_unassigned s v
+
+let if_state_has_all_it_is_updated
+    {|sig|}
+    (s:state)
+    (vs:list vars)
+    : Lemma ((state_has s vs /\ (forall (v:vars). mem v vs)) ==> is_updated s)
+    // [SMTPat (state_has s vs); SMTPat (is_updated s)]
+    = ()
 
 /// A computation of a value of type `a`,
 /// over a state defined by `sig`
@@ -100,6 +108,19 @@ type action {|sig|} (vs:list vars)
       s:state{state_not_has s vs}
       -> s1:state{state_has s1 vs /\ (forall v. (not (mem v vs)) ==> DM.sel s1 v == DM.sel s v)}
     )
+
+// let todo1 =
+//   {|sig|}
+//   (s:state)
+//   (vs:vars)
+//   : Lemma ()
+
+let todo
+  {|sig|} #vs
+  (s:state{state_has s vs /\ (forall v. (not (mem v vs)) ==> DM.sel s v == DM.sel s v)})
+  : Lemma ((forall (v:vars). mem v vs) ==> is_updated s)
+  [SMTPat (state_has s vs); SMTPat (is_updated s)]
+  = ()
 
 
 /// Requirements
