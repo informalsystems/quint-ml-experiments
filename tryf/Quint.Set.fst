@@ -4,14 +4,6 @@ open FStar.Order
 open FStar.List.Tot
 open Quint.Ordered
 
-// let rec sorted_uniq #a {| ordered a |} : list a -> bool = function
-//   | []  -> true
-//   | [x] -> true
-//   | x :: y :: xs ->
-//   match compare x y with
-//   | Lt -> sorted_uniq (y :: xs)
-//   | _  -> false
-
 let rec sorted
   #a {| ordered a |}
   : list a -> bool = function
@@ -30,77 +22,6 @@ let rec mem #a {| ordered a |} (e:a)
   match compare e x with
   | Eq -> true
   | _  -> mem e xs
-
-// let rec cons_sorted
-//   #a {| ordered a |}
-//   : x:a -> l:list a{sorted l} ->
-//   Lemma (requires (forall y. mem y l ==> compare x y = Lt))
-//         (ensures sorted (x :: l))
-//   = fun x -> function
-//   | [] -> ()
-//   | _ :: xs -> cons_sorted x xs
-
-// let rec merge
-//   #a {| ordered a |}
-//   : l1:list a -> l2:list a -> list a
-//   = fun xs ys ->
-//   match xs, ys with
-//   | [], ys -> ys
-//   | xs, [] -> xs
-//   | x :: xs', y :: ys' ->
-//   match compare x y with
-//   | Eq -> merge xs' ys
-//   | Gt -> y :: merge xs ys'
-//   | Lt -> x :: merge xs' ys
-
-// TODO: I should be able to reuse the `rev_length` fact from List.Tot, but
-// i'm not able to for some reason, so rev is reimplemented here.
-// let rec rev_aux
-//   #a (l:list a) (acc:list a)
-//   : r:list a{length r == length l + length acc}
-//   = match l with
-//   | [] -> acc
-//   | x :: xs -> rev_aux xs (x::acc)
-
-// let rev
-//   #a (l:list a)
-//   : r:list a{length r == length l}
-//   = rev_aux l []
-
-// let rec take_aux
-//   #a (c:nat) (n:nat{n >= c}) (l:list a) (acc:list a{length acc == c})
-//   : Tot (o:list a{ length o <= n })
-//         (decreases l)
-//   =
-//   if c = n then
-//     acc
-//   else match l with
-//   | [] -> acc
-//   | x :: xs -> take_aux (c + 1) n xs (x :: acc)
-
-// let take
-//   #a (n:nat) (l:list a)
-//   : o:list a{length o <= n}
-//   =
-//   rev (take_aux 0 n l [])
-
-// let rec drop
-//   #a (n:nat) (l:list a{length l >= n})
-//   : o:list a{length o == length l - n}
-//   = if n = 0 then l else
-//     drop (n - 1) (tail l)
-
-// TODO: Prove that length is preserved
-// Drops duplicates, the latest found duplicate is preserved
-// let rec sort #a {| ordered a |} : l:list a -> Tot (list a) (decreases (length l)) = function
-//   | []  -> []
-//   | [x] -> [x]
-//   | ls  ->
-//     let n = length ls / 2 in
-//     let xs = take n ls in
-//     let ys = drop n ls in
-//     let ls' = merge (sort xs) (sort ys) in
-//     ls'
 
 let order_to_int : order -> int = function
   | Eq -> 0
