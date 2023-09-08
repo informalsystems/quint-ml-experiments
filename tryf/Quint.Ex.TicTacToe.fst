@@ -1,12 +1,15 @@
-
 module Quint.Ex.TicTacToe
 
 open FStar.Order
 open Quint.Ordered
 
 module Map = Quint.Map
-
+module Ordered = Quint.Ordered
+module State = Quint.State
 module Set = Quint.Set
+
+open Quint.State.Sig
+
 let set #a {| ordered a |} (l: list a) = Set.set l
 
 let ( |> ) x f = f x
@@ -99,3 +102,13 @@ let x_can_win (b:board) = winning_patterns |> Set.for_some (x_can_win_with_patte
 let x_can_block (b:board) = winning_patterns |> Set.for_some (x_can_block_with_pattern b)
 let can_take_center (b:board) = is_empty b (2,2)
 let x_can_set_up_win (b:board) = winning_patterns |> Set.for_some (x_can_set_up_win_with_pattern b)
+
+type vars = | Board | Next_turn
+instance state_sig : sig = {
+   vars = vars;
+   types = (function
+         | Board -> int
+         | Next_turn -> bool)
+}
+
+let st = State.state
