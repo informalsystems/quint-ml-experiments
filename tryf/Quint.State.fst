@@ -134,8 +134,11 @@ let ( |! ) {|sig|} #vs (a1:action vs) (a2:action vs) : action vs  =
   a2 s0
 
 
+// A transition is an action that updates all the variables
+type transition {|sig|} #vs = a:action vs{(forall v. mem v vs)}
+
 // TODO: need to adjust precedence so don't need to use brackets
-let _ex_conj_action : action [V; X] =
+let _ex_conj_action : transition =
   (  V @= 1
   &! X @= "foo"
   )
@@ -145,7 +148,7 @@ let _ex_disj_action : action [V] =
   |! V @= 2
   )
 
-let _ex_comb_action : action [V; X] =
+let _ex_comb_action : transition =
   (  V @= 1
   &! X @= "foo"
   )
@@ -154,8 +157,6 @@ let _ex_comb_action : action [V; X] =
   &! X @= "fee"
   )
 
-
-// let run_n_steps {|sig|} (n:int) (init:state): nondet action =
 
 let _ex_req_action : action [V; X] =
   (  req (let! v = !V in v > 1)
@@ -176,15 +177,17 @@ let _ex_req_action : action [V; X] =
 let one_of #a {|ordered a|} (s:Set.non_empty a) : nondet a =
   Rng.rand_choice s.ls
 
-// let _ex_nondet_action : nondet (action [V; X]) =
-//     let? a = one_of (Set.set[1;2;3])
-//     and? b = one_of (Set.set["a"; "b"; "c"])
-//     in
-//     (  req (
-//         let! v = !V
-//         and! x = !X
-//         in
-//         v >= a && x = "a" )
-//     &! V @= a
-//     &! X @= b
-//     )
+let _ex_nondet_action : nondet transition
+  =
+    let? vr : int = one_of (Set.set[1;2;3])
+    and? xr : string = one_of (Set.set["a"; "b"; "c"])
+    in
+    (  req (
+          let! v' = !V
+          and! x' = !X
+          in
+          v' > vr && x' = xr
+       )
+    &! V @= vr
+    &! X @= xr
+    )
