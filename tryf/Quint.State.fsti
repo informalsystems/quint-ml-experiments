@@ -115,7 +115,7 @@ type action {|sig|} (vs:list vars)
 //   (vs:vars)
 //   : Lemma ()
 
-let todo
+let state_has_all_is_updated
   {|sig|} #vs
   (s:state{state_has s vs /\ (forall v. (not (mem v vs)) ==> DM.sel s v == DM.sel s v)})
   : Lemma ((forall (v:vars). mem v vs) ==> is_updated s)

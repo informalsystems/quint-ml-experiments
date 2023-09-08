@@ -192,16 +192,16 @@ let _ex_nondet_action : nondet transition
     &! X @= xr
     )
 
-// TODO: We need to prove that applying a transition produces an updated state
+// TODO: We lose the logic to track state updates and figure out
+// that `t:transition #s #vs -> is_updated(t(s0))` when we wrap and unwrap
+// from nondet. Need to entrich it's type to preserve these properties?
 let apply {|s:sig|} #vs
-  (t:nondet (transition #s #vs))
+  (t:transition #s #vs)
   (s0:state{is_updated s0})
-  : nondet (option (s1:state{state_has s1 vs}))
+  : option (s1:state{state_has s1 vs})
    =
-  let? t = t in
+  // let? t = t in
   match t s0 with
   | None -> None
   | Some update ->
-  let s = update (empty_state #s) in
-  // assume (is_updated s);
-  Some s
+  Some (update empty_state)
