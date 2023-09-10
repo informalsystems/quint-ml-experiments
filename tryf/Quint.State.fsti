@@ -21,20 +21,17 @@ let optional #k : (k -> Type) -> k -> Type =
 /// A state defined by a signature `sig`
 let state {| s:sig |} = DM.t vars (optional s.types)
 
-// /// A state defined by a signature `sig`
-// val state {| sig |} : DM.t vars (optional types)
-
-/// A state initialization function
-type init_t {|sig|} = v:vars -> types v
-
-/// Construct a state from an initialization function
-val init : sig -> init_t -> state
-
 /// Predicates over states
 let is_assigned {| sig |} (m:state) k = Some? (DM.sel m k)
 let is_unassigned {| sig |} (m:state) k = None? (DM.sel m k)
 let is_fresh {| sig |} (m:state) = forall (v:vars). is_unassigned m v
 let is_updated {| sig |} (m:state) = forall (v:vars). is_assigned m v
+
+/// A state initialization function
+type init_t {|sig|} = v:vars -> types v
+
+/// Construct a state from an initialization function
+val init : sig -> init_t -> s:state{is_updated s}
 
 let empty_state {| sig |} : m:state{is_fresh m} =
   let clear _ = None in
@@ -199,10 +196,11 @@ let apply {|s:sig|} #vs
   let? t = nt in
   apply_det t s0
 
-
 let rec run_aux {|s:sig|} #vs
-  (nt:nondet (transition #s #vs)) (s0:state{is_updated s0})
-  : nat -> nondet (list state) = function
+  (nt:nondet (transition #s #vs))
+  (s0:state{is_updated s0})
+  : nat -> nondet (list state)
+  = function
   | 0 -> return []
   | n ->
   apply nt s0 >>= (function
@@ -211,6 +209,9 @@ let rec run_aux {|s:sig|} #vs
   let? states = run_aux nt s0 (n - 1) in
   s0 :: states)
 
-
-// let run {|s:sig|} #vs (n_steps:nat) (i:init_t) (nt:nondet transition) =
-//   let init_state = init s i in
+let run {|s:sig|} #vs
+  (n_steps:nat)
+  (i:init_t)
+  (nt:nondet (transition #s #vs)) =
+  let s0 = init s i in
+  run_aux nt s0 n_steps
