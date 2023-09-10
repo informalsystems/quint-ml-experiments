@@ -195,13 +195,20 @@ let _ex_nondet_action : nondet transition
 // TODO: We lose the logic to track state updates and figure out
 // that `t:transition #s #vs -> is_updated(t(s0))` when we wrap and unwrap
 // from nondet. Need to entrich it's type to preserve these properties?
-let apply {|s:sig|} #vs
+let apply_det {|s:sig|} #vs
   (t:transition #s #vs)
   (s0:state{is_updated s0})
   : option (s1:state{state_has s1 vs})
    =
-  // let? t = t in
   match t s0 with
   | None -> None
   | Some update ->
   Some (update empty_state)
+
+let apply {|s:sig|} #vs
+  (nt:nondet (transition #s #vs))
+  (s0:state{is_updated s0})
+  : nondet (option (s1:state{state_has s1 vs}))
+  =
+  let? t = nt in
+  apply_det t s0
