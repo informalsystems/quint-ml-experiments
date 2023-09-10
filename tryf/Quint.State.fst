@@ -18,10 +18,6 @@ let init_opt {| sig |}: f:(v:vars -> types v) -> v':vars -> option (types v') =
 
 let init (s:sig) (f:init_t) : state = DM.create (init_opt f)
 
-let empty_state {| sig |} : m:state{is_fresh m} =
-  let clear _ = None in
-  DM.create (clear)
-
 let upd {| sig |} (v:vars) (x:types v)
   : m:state{is_unassigned m v} -> m':state{is_assigned m' v} =
   fun m -> DM.upd m v (Some x)
@@ -134,8 +130,8 @@ let ( |! ) {|sig|} #vs (a1:action vs) (a2:action vs) : action vs  =
   a2 s0
 
 
-// A transition is an action that updates all the variables
-type transition {|sig|} #vs = a:action vs{(forall (v : vars). mem v vs)}
+let one_of #a {|ordered a|} (s:Set.non_empty a) : nondet a =
+  Rng.rand_choice s.ls
 
 // TODO: need to adjust precedence so don't need to use brackets
 let _ex_conj_action : transition =
@@ -174,9 +170,6 @@ let _ex_req_action : action [V; X] =
   &! X @= "fee"
   )
 
-let one_of #a {|ordered a|} (s:Set.non_empty a) : nondet a =
-  Rng.rand_choice s.ls
-
 let _ex_nondet_action : nondet transition
   =
     let? vr : int = one_of (Set.set[1;2;3])
@@ -191,24 +184,3 @@ let _ex_nondet_action : nondet transition
     &! V @= vr
     &! X @= xr
     )
-
-// TODO: We lose the logic to track state updates and figure out
-// that `t:transition #s #vs -> is_updated(t(s0))` when we wrap and unwrap
-// from nondet. Need to entrich it's type to preserve these properties?
-let apply_det {|s:sig|} #vs
-  (t:transition #s #vs)
-  (s0:state{is_updated s0})
-  : option (s1:state{state_has s1 vs})
-   =
-  match t s0 with
-  | None -> None
-  | Some update ->
-  Some (update empty_state)
-
-let apply {|s:sig|} #vs
-  (nt:nondet (transition #s #vs))
-  (s0:state{is_updated s0})
-  : nondet (option (s1:state{state_has s1 vs}))
-  =
-  let? t = nt in
-  apply_det t s0

@@ -1,67 +1,12 @@
-
 module Quint.Rng
 
-open FStar.Mul
+open Quint.Rng.Internal
+
 module List = FStar.List.Tot
 
-// An RNG adapted from https://raw.githubusercontent.com/informalsystems/quint/main/quint/src/rng.ts
-// with all the shortcomings and basis of that impl
+open Quint.Rng.Ops
 
-type rng_state = | Rn : v:int -> rng_state
-
-// TODO, add a method to access the rng_state?
-type t a = rng_state -> a & rng_state
-
-let u32 = 0x100000000
-let u64 = 0x10000000000000000
-
-let key = 0xfb9e125878fa6cb3
-
-let squares64 (s:rng_state): nat =
-  let x = (s.v * key) % u64 in
-  let y = x in
-  let z = (y + key) % u64 in
-  let x = (((x * x) % u64) + y) % u64 in
-  let x = (x / u32 + ((x * u32) % u64)) % u64 in
-  // round 2
-  let x = (((x * x) % u64) + z) % u64 in
-  let x = (x / u32 + ((x * u32) % u64)) % u64 in
-  // round 3
-  let x = (((x * x) % u64) + y) % u64 in
-  let x = (x / u32 + ((x * u32) % u64)) % u64 in
-  // round 4
-  ((((x * x) % u64) + z) % u64) / u32
-
-
-let rec rand_aux (s : rng_state) (input:nat{input > 0}) (output base:int)
-  : Tot (int & rng_state)
-        (decreases input)
-  =
-  if input >= u32 then
-    let output' = output * u32 + squares64(s) in
-    let input' = input / u32 in
-    let base' = base * u32 in
-    let s' = Rn ((s.v + 1) % u64) in
-    rand_aux s' input' output' base'
-  else
-    // TODO Check quint lib to see of it breaks when range is 0
-    let output' = (squares64(s) % input) * base + output in
-    let rng_state' = Rn ((s.v + 1) % u64) in
-    output', rng_state'
-
-
-let return #a (x:a): t a = fun s -> (x, s)
-
-let (let?) #a #b (rng:t a) (f: a -> b): t b=
-  fun s ->
-    let r, s' = rng s in
-    return (f r) s'
-
-let (and?) #a #b (r1:t a) (r2: t b): t (a & b) =
-  fun s ->
-    let x1, s' = r1 s in
-    let x2, s'' = r2 s' in
-    return (x1, x2) s''
+type t = t
 
 let init (s:nat): rng_state = Rn (s % u64)
 

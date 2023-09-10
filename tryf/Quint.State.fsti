@@ -2,12 +2,13 @@
 module Quint.State
 
 open FStar.List.Tot
-open Quint.Rng
+
 open FStar.Tactics.Typeclasses
 open Quint.State.Sig
+open Quint.Rng.Ops
 
+module Rng = Quint.Rng
 module DM = FStar.DependentMap
-
 
 
 /// # State
@@ -34,6 +35,10 @@ let is_assigned {| sig |} (m:state) k = Some? (DM.sel m k)
 let is_unassigned {| sig |} (m:state) k = None? (DM.sel m k)
 let is_fresh {| sig |} (m:state) = forall (v:vars). is_unassigned m v
 let is_updated {| sig |} (m:state) = forall (v:vars). is_assigned m v
+
+let empty_state {| sig |} : m:state{is_fresh m} =
+  let clear _ = None in
+  DM.create (clear)
 
 /// # State functions: the *read* effect
 
@@ -115,12 +120,12 @@ type action {|sig|} (vs:list vars)
 //   (vs:vars)
 //   : Lemma ()
 
-let state_has_all_is_updated
-  {|sig|} #vs
-  (s:state{state_has s vs /\ (forall v. (not (mem v vs)) ==> DM.sel s v == DM.sel s v)})
-  : Lemma ((forall (v:vars). mem v vs) ==> is_updated s)
-  [SMTPat (state_has s vs); SMTPat (is_updated s)]
-  = ()
+// let state_has_all_is_updated
+//   {|sig|} #vs
+//   (s:state{state_has s vs /\ (forall v. (not (mem v vs)) ==> DM.sel s v == DM.sel s v)})
+//   : Lemma ((forall (v:vars). mem v vs) ==> is_updated s)
+//   [SMTPat (state_has s vs); SMTPat (is_updated s)]
+//   = ()
 
 
 /// Requirements
@@ -149,13 +154,9 @@ open Quint.Ordered
 
 module Set = Quint.Set
 
-/// Run a nondet computatoin
-let run = run
-
 /// Nondeterministically select a value of type `a` from a non-empty set
 val one_of #a {|ordered a|} : Set.non_empty a -> nondet a
 
-open Quint.Rng
 
 /// Bind values in nondet contexts
 ///
@@ -173,9 +174,43 @@ open Quint.Rng
 ///   &! X @= b
 ///   )
 /// ```
-let (let?) = (let?)
-let (and?) = (and?)
-
 
 
 /// # Transitions
+
+// A transition is an action that updates all the variables
+type transition {|sig|} #vs = a:action vs{(forall (v : vars). mem v vs)}
+
+let apply_det {|s:sig|} #vs
+  (t:transition #s #vs)
+  (s0:state{is_updated s0})
+  : option (s1:state{state_has s1 vs})
+   =
+  match t s0 with
+  | None -> None
+  | Some update ->
+  Some (update empty_state)
+
+let apply {|s:sig|} #vs
+  (nt:nondet (transition #s #vs))
+  (s0:state{is_updated s0})
+  : nondet (option (s1:state{state_has s1 vs}))
+  =
+  let? t = nt in
+  apply_det t s0
+
+
+let rec run_aux {|s:sig|} #vs
+  (nt:nondet (transition #s #vs)) (s0:state{is_updated s0})
+  : nat -> nondet (list state) = function
+  | 0 -> return []
+  | n ->
+  apply nt s0 >>= (function
+  | None    -> return []
+  | Some s1 ->
+  let? states = run_aux nt s0 (n - 1) in
+  s0 :: states)
+
+
+// let run {|s:sig|} #vs (n_steps:nat) (i:init_t) (nt:nondet transition) =
+//   let init_state = init s i in
