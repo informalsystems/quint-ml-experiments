@@ -25,11 +25,6 @@ type coord = nat * nat
 
 type board = Map.t coord player
 
-type state =
-  { board : board
-  ; next_turn : player
-  }
-
 let board_coordinates =
   Set.product (Set.range 1 3) (Set.range 1 3)
 
@@ -61,9 +56,6 @@ let is_occupied_by_player (b:board) (p:player) (c:coord) : bool =
 
 let is_empty (b:board) (c:coord) : bool =
   Map.get c b |> None?
-
-let next_turn_is (p:player) (s:state) : bool =
-  s.next_turn = p
 
 let board_is_empty (b:board) : bool = b =
   Set.empty
@@ -109,7 +101,13 @@ instance state_sig : sig = {
    vars = vars;
    types = (function
          | Board -> int
-         | Next_turn -> bool)
+         | Next_turn -> player)
 }
+let state = State.state
 
-let st = State.state
+// let move (p:player) (c:coord) : State.action [Board] =
+//   req (
+//     let! b = !Board in
+//     &! (chk (is_empty b))
+//     &! Board @= Map.put coord p
+//     )
