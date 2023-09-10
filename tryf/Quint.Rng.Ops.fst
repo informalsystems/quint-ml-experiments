@@ -11,6 +11,23 @@ let (>>=) #a #b (rng:t a) (f: a -> t b): t b =
     let r, s' = rng s in
     f r s'
 
+
+/// Bind values in nondet contexts
+///
+/// ```
+/// let ex : nondet (action [V; X]) =
+///   let? a = one_of (set[1;2;3])
+///   and? b = one_of (set["a"; "b"; "c"])
+///   in
+///   (  req (
+///        let! v = !V
+///        and! x = !X
+///        in
+///        v > a && x = "a" )
+///   &! V @= a
+///   &! X @= b
+///   )
+/// ```
 let (let?) #a #b (rng:t a) (f: a -> b): t b=
   fun s ->
     let r, s' = rng s in
