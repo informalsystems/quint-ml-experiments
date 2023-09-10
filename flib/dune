@@ -1,6 +1,8 @@
 (env
   (dev
-    (flags (:standard -w -27-33-8))))
+   ;  TODO I'm not sure 20 should be ignored, it is
+   ; Error (warning 20 [ignored-extra-argument]): this argument will not be used by the function.
+    (flags (:standard -w -27-33-8-20))))
 
 (library
  (name lang)
@@ -15,7 +17,13 @@
   Quint_Ex_TicTacToe.ml
   Quint_Ordered.ml
   Quint_Set.ml
-  Quint_Map.ml)
+  Quint_Map.ml
+  Quint_Rng.ml
+  Quint_Rng_Ops.ml
+  Quint_Rng_Internal.ml
+  Quint_Util.ml
+  Quint_State.ml
+  Quint_State_Sig.ml)
  (deps
   (glob_files ../tryf/*.fst))
  (action (run fstar.exe --codegen OCaml --include ../tryf ../tryf/Quint.Ex.TicTacToe.fst)))
