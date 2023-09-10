@@ -128,9 +128,17 @@ type action {|sig|} (vs:list vars)
 /// Requirements
 val req {| sig |} #vs : read vs bool -> action []
 
+let chk {|sig|} (b:bool): action [] =
+    fun s0 ->
+    if b then
+      Some (fun s -> s)
+    else
+      None
+
 /// `v @= x` updates the state variable `v` to the value `x` in the next state
 val ( @= ) {|sig|} : v:vars -> x:types v -> action [v]
 
+// TODO: replace ! with @ for consistency
 /// The composition of actions
 val ( &! ) {|sig|} #vs #vs'
   :  a1:action vs
