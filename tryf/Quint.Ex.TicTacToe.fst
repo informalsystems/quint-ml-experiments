@@ -100,14 +100,16 @@ type vars = | Board | Next_turn
 instance state_sig : sig = {
    vars = vars;
    types = (function
-         | Board -> int
+         | Board -> board
          | Next_turn -> player)
 }
 let state = State.state
 
-// let move (p:player) (c:coord) : State.action [Board] =
-//   req (
-//     let! b = !Board in
-//     &! (chk (is_empty b))
-//     &! Board @= Map.put coord p
-//     )
+open Quint.State
+
+let move (p:player) (c:coord) : action [Board] = !@ (
+  let! b = !Board in
+  (  chk (is_empty b c)
+  &@ Board @= Map.put c p b
+  )
+)

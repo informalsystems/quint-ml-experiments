@@ -206,6 +206,13 @@ let chk {|sig|} (b:bool): action [] =
     else
       None
 
+// Turn an action that depends on reading into an action
+let ( !@ ) {|sig|} #rs #vs
+    (ra : read rs (action vs))
+    : action vs
+    =
+    fun s0 -> ra s0 s0
+
 /// `v @= x` updates the state variable `v` to the value `x` in the next state
 val ( @= ) {|sig|} : v:vars -> x:types v -> action [v]
 let ( @= ) {|sig|} (v:vars) (x:types v) : action [v]
@@ -213,12 +220,12 @@ let ( @= ) {|sig|} (v:vars) (x:types v) : action [v]
 
 // TODO: replace ! with @ for consistency
 /// The composition of actions
-val ( &! ) {|sig|} #vs #vs'
+val ( &@ ) {|sig|} #vs #vs'
   :  a1:action vs
   -> a2:action vs'{forall v. mem v vs' ==> not (mem v vs)}
   -> action (vs @ vs')
 /// Conjunction is the composition of actions
-let ( &! ) {|sig|} #vs #vs'
+let ( &@ ) {|sig|} #vs #vs'
   (a1:action vs)
   (a2:action vs'{forall v. mem v vs' ==> not (mem v vs)}) // a2 cannot update the same vars as a1
   : action (vs @ vs') // ther
@@ -233,9 +240,9 @@ let ( &! ) {|sig|} #vs #vs'
   Some (fun (s:state{state_not_has s (vs @ vs')}) -> (upd2 (upd1 s)))
 
 /// The alternation of actions
-val ( |! ) {|sig|} #vs : action vs -> action vs -> action vs
+val ( |@ ) {|sig|} #vs : action vs -> action vs -> action vs
 // TODO Add non-det
-let ( |! ) {|sig|} #vs (a1:action vs) (a2:action vs) : action vs  =
+let ( |@ ) {|sig|} #vs (a1:action vs) (a2:action vs) : action vs  =
   fun s0 ->
   match a1 s0 with
   | Some upd1 -> Some upd1
@@ -256,6 +263,8 @@ let one_of #a {|ordered a|} (s:Set.non_empty a) : nondet a =
 open Quint.Ordered
 
 module Set = Quint.Set
+
+
 
 /// # Transitions
 
@@ -306,38 +315,36 @@ let run {|s:sig|} #vs
 // TODO: need to adjust precedence so don't need to use brackets
 let _ex_conj_action : transition =
   (  V @= 1
-  &! X @= "foo"
+  &@ X @= "foo"
   )
 
 let _ex_disj_action : action [V] =
   (  V @= 1
-  |! V @= 2
+  |@ V @= 2
   )
 
 let _ex_comb_action : transition =
   (  V @= 1
-  &! X @= "foo"
+  &@ X @= "foo"
   )
-  |!
+  |@
   (  V @= 10
-  &! X @= "fee"
+  &@ X @= "fee"
   )
 
 
 let _ex_req_action : action [V; X] =
   (  req (let! v = !V in v > 1)
-  &! V @= 1
-  &! X @= "foo"
-  )
-  |!
-  (  req (
+  &@ V @= 1
+  &@ X @= "foo"
+  ) |@ (  req (
       let! v = !V
       and! x = !X
       in
       v < 1 && x = "foo"
      )
-  &! V @= 10
-  &! X @= "fee"
+  &@ V @= 10
+  &@ X @= "fee"
   )
 
 let _ex_nondet_action : nondet transition
@@ -351,6 +358,6 @@ let _ex_nondet_action : nondet transition
           in
           v' > vr && x' = xr
        )
-    &! V @= vr
-    &! X @= xr
+    &@ V @= vr
+    &@ X @= xr
     )
