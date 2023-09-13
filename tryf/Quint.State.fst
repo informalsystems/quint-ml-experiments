@@ -49,12 +49,12 @@ let upd {| sig |} (v:vars) (x:types v)
   fun m -> DM.upd m v (Some x)
 
 // START State Example
-type ex_var = | V | X
+type ex_var = | V | U
 instance ex_sig : sig = {
   vars = ex_var;
   types = function
     | V -> int
-    | X -> string
+    | U -> string
 }
 
 // Trying to update the same variable twice fails
@@ -63,15 +63,15 @@ let _ex_cannot_update_twice = (~(upd V 1 empty_state |> upd V 10))
 
 let _ex_is_updated_empty = assert_norm (~(is_updated (empty_state)))
 let _ex_is_updated_partial = assert_norm (~(is_updated (empty_state |> upd V 1)))
-let _ex_is_updated = assert_norm (is_updated ( upd V 1  empty_state |> upd X "foo" ))
+let _ex_is_updated = assert_norm (is_updated ( upd V 1  empty_state |> upd U "foo" ))
 
 let _s = init ex_sig (function
   | V -> 0
-  | X -> "foo")
+  | U -> "foo")
 
 let _ex_init = assert_norm (is_updated _s)
 let _ex_v = assert_norm (DM.sel _s V = Some 0)
-let _ex_x = assert_norm (DM.sel _s X = Some "foo")
+let _ex_x = assert_norm (DM.sel _s U = Some "foo")
 // END State Example
 
 // TODO Use `DM.restrict` to limit map to just declared variables
@@ -170,9 +170,9 @@ let (and!) {|sig|} #a #b #vs #vs'
   (x : read vs a) (y : read vs' b) : read (vs @ vs') (a * b)
   = fun s -> (x s, y s)
 
-let _read_ex : read [X; V] (int * string) =
+let _read_ex : read [U; V] (int * string) =
     let! x = !V
-    and! v = !X
+    and! v = !U
     in
     (x, v)
 
@@ -192,6 +192,10 @@ type action {|sig|} (vs:list vars)
       s:state{state_not_has s vs}
       -> s1:state{state_has s1 vs /\ (forall v. (not (mem v vs)) ==> DM.sel s1 v == DM.sel s v)}
     )
+
+// An action that fails
+let fail {|sig|} #vs : action vs =
+   fun _ -> None
 
 /// Requirements
 val req {| sig |} #vs : read vs bool -> action []
@@ -260,6 +264,23 @@ val one_of #a {|ordered a|} : Set.non_empty a -> nondet a
 let one_of #a {|ordered a|} (s:Set.non_empty a) : nondet a =
   Rng.rand_choice s.ls
 
+let ( !? ) {|s:sig|} #rs #vs
+    (rnda: read rs (nondet (action vs)))
+    : nondet (action #s vs)
+    =
+    fun rng_st ->
+    let a : action vs = fun s0 ->
+      /// FIXME: We are not properly advancing the state here
+      let a, _ = rnda s0 rng_st in
+      a s0
+    in
+    (a, Rng.incr_state rng_st)
+
+// (
+//     // f)un rng s0 ->
+//     let nda = rnda s0 in
+//     nda rng
+
 open Quint.Ordered
 
 module Set = Quint.Set
@@ -315,7 +336,7 @@ let run {|s:sig|} #vs
 // TODO: need to adjust precedence so don't need to use brackets
 let _ex_conj_action : transition =
   (  V @= 1
-  &@ X @= "foo"
+  &@ U @= "foo"
   )
 
 let _ex_disj_action : action [V] =
@@ -325,26 +346,26 @@ let _ex_disj_action : action [V] =
 
 let _ex_comb_action : transition =
   (  V @= 1
-  &@ X @= "foo"
+  &@ U @= "foo"
   )
   |@
   (  V @= 10
-  &@ X @= "fee"
+  &@ U @= "fee"
   )
 
 
-let _ex_req_action : action [V; X] =
+let _ex_req_action : action [V; U] =
   (  req (let! v = !V in v > 1)
   &@ V @= 1
-  &@ X @= "foo"
+  &@ U @= "foo"
   ) |@ (  req (
       let! v = !V
-      and! x = !X
+      and! x = !U
       in
       v < 1 && x = "foo"
      )
   &@ V @= 10
-  &@ X @= "fee"
+  &@ U @= "fee"
   )
 
 let _ex_nondet_action : nondet transition
@@ -354,10 +375,10 @@ let _ex_nondet_action : nondet transition
     in
     (  req (
           let! v' = !V
-          and! x' = !X
+          and! x' = !U
           in
           v' > vr && x' = xr
        )
     &@ V @= vr
-    &@ X @= xr
+    &@ U @= xr
     )

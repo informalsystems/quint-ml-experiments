@@ -10,6 +10,8 @@ type t = t
 
 let init (s:nat): rng_state = Rn (s % u64)
 
+let incr_state = incr_state
+
 // TODO: Prove boundary property
 /// [rand_int n] is a random nat `i` `0 <= i < n`
 let rand_nat (bound:nat{bound  > 0}): t (n:nat{n >= 0 /\ n < bound}) =

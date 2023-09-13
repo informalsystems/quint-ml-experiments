@@ -32,6 +32,8 @@ let squares64 (s:rng_state): nat =
   ((((x * x) % u64) + z) % u64) / u32
 
 
+let incr_state (s : rng_state) : rng_state = Rn ((s.v + 1) % u64)
+
 let rec rand_aux (s : rng_state) (input:nat{input > 0}) (output base:int)
   : Tot (int & rng_state)
         (decreases input)
@@ -45,5 +47,5 @@ let rec rand_aux (s : rng_state) (input:nat{input > 0}) (output base:int)
   else
     // TODO Check quint lib to see of it breaks when range is 0
     let output' = (squares64(s) % input) * base + output in
-    let rng_state' = Rn ((s.v + 1) % u64) in
+    let rng_state' = incr_state s in
     output', rng_state'

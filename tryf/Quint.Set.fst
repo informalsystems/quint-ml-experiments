@@ -69,18 +69,19 @@ let _sets_ex : t (t int) = set[set[0]; set[1]; set[1;2;3]; union (set[0]) (set[3
 let add #a {| ordered a |} (x:a) (s:t a) : t a =
   union s (set[x])
 
+// TODO Make this work for ints, but such that we know the resulting list is within the upper and lower bounds
 let rec range_aux
-  :  i:int -> j:int{i <= j}
-  -> Tot (list int)
+  :  i:nat -> j:nat{i <= j}
+  -> Tot (list nat)
          (decreases j - i)
   = fun i j ->
     if i = j then
-    [j]
+      [j]
     else
-    i :: range_aux (i + 1) j
+      i :: range_aux (i + 1) j
 
 let range
-  : i:int -> j:int{i <= j} -> t int
+  : i:nat -> j:nat{i <= j} -> t nat
   = fun i j ->
   set (range_aux i j)
 
@@ -123,9 +124,21 @@ let size
   : nat
   = length s
 
+let filter
+  #a {|ordered a|}
+  (f: a -> bool) (s: t a)
+  : t a
+  = set (filter f s.ls)
+
 let partition
   #a {| ordered a |}
   (f: a -> bool) (Set s: t a)
   : t a * t a
   = let has, has_not = partition f s in
     set has, set has_not
+
+let find
+  #a {|ordered a|}
+  (f: a -> bool) (s: t a)
+  : option (x:a{f x})
+  = List.find f s.ls
