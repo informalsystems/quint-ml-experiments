@@ -6,7 +6,6 @@ open FStar.List.Tot
 
 open Quint.Util
 open Quint.Ordered
-open Quint.State.Sig
 open Quint.Rng.Ops
 
 module DM = FStar.DependentMap
@@ -15,6 +14,16 @@ module Rng = Quint.Rng
 module Set = Quint.Set
 
 /// # State
+
+/// State signature
+///
+/// Defines a state space
+class sig = {
+   /// `vars` is the set of "flexible variables"
+   vars:eqtype;
+   /// `types` maps each variable to the types of the values it can be assigned
+   types: vars -> Type
+}
 
 let optional #k : (k -> Type) -> k -> Type =
   fun f v -> option (f v)

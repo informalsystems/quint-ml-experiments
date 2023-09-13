@@ -8,7 +8,6 @@ module Ordered = Quint.Ordered
 module State = Quint.State
 module Set = Quint.Set
 
-open Quint.State.Sig
 open Quint.Util
 
 let set #a {| ordered a |} (l: list a): s:Set.t a{Set.preserves_nonempty l s.ls} = Set.set l
