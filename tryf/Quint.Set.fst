@@ -3,6 +3,7 @@ module Quint.Set
 open FStar.Order
 open FStar.List.Tot
 open Quint.Ordered
+open Quint.Show
 
 let rec sorted
   #a {| ordered a |}
@@ -102,7 +103,7 @@ let product
 
 let _product_ex =
   let actual = product (range 0 2) (range 2 4) in
-  let expected = set [0, 2; 0, 3; 0, 4; 1, 2; 1, 3; 1, 4; 2, 2; 2, 3; 2, 4] in
+  let expected : t (nat * nat) = set [0, 2; 0, 3; 0, 4; 1, 2; 1, 3; 1, 4; 2, 2; 2, 3; 2, 4] in
   assert_norm (compare actual expected = Eq)
 
 let for_all
@@ -142,3 +143,19 @@ let find
   (f: a -> bool) (s: t a)
   : option (x:a{f x})
   = List.find f s.ls
+
+
+let rec string_of_set_aux
+  #a {|show a|}
+  : list (a) -> string
+  = function
+  | [] -> ")"
+  | x :: xs ->
+    to_string x  ^ ", " ^ string_of_set_aux xs
+
+let string_of_set #a {|show a|} (m:t a): string =
+  "Set(" ^ string_of_set_aux m.ls
+
+instance show_set #a {|show a|} : show (t a) = {
+  to_string = string_of_set
+}

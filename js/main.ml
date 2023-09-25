@@ -3,9 +3,12 @@ open Js_of_ocaml
 
 module Html = Dom_html
 
-open Lwt.Syntax
+(* open Lwt.Syntax *)
 let _ =
   Lwt.async (fun () ->
-      let+ m = Um_quint.Run.ex in
-      print_endline m
+      (* TODO *)
+      (* Having trouble with the fstar.lib deps *)
+      (* let _ = Quint_ml.Fdep.trace_tic_tac_toe ~steps:5 () in *)
+      print_endline "TODO";
+      Lwt.return ()
     )

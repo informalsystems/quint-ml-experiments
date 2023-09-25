@@ -1,5 +1,5 @@
 (executable
  (name main)
  (public_name testing)
- (libraries um_quint lwt.unix containers)
+ (libraries quint_ml lwt.unix containers)
  (preprocess (pps ppx_deriving.std)))

@@ -7,10 +7,20 @@ module Map = Quint.Map
 module Ordered = Quint.Ordered
 module State = Quint.State
 module Set = Quint.Set
+module IO = FStar.IO
 
 open Quint.Util
 
 let set #a {| ordered a |} (l: list a): s:Set.t a{Set.preserves_nonempty l s.ls} = Set.set l
+
+let print_debug = true
+
+let debug msg =
+  if print_debug then
+    let _ = IO.debug_print_string (msg ^ "\n") in
+    true
+  else
+    true
 
 
 /// DATA
@@ -18,6 +28,11 @@ let set #a {| ordered a |} (l: list a): s:Set.t a{Set.preserves_nonempty l s.ls}
 type player =
   | O
   | X
+
+
+let player_to_string : player -> string = function
+  | X -> "X"
+  | O -> "O"
 
 type coord = nat * nat
 
@@ -56,7 +71,7 @@ let is_occupied_by_player (b:board) (p:player) (c:coord) : bool =
   | Some p' -> p = p'
 
 let is_empty (b:board) (c:coord) : bool =
-  Map.get c b |> None?
+  None? (Map.get c b)
 
 let board_is_empty (b:board) : bool = b =
   Set.empty
@@ -137,37 +152,39 @@ let free_space (p:player) (b:board) : State.nondet (option coord) =
 
 /// STATE
 
-type vars = | Board | Next_turn
-instance state_sig : sig = {
-   vars = vars;
-   types = (function
-         | Board -> board
-         | Next_turn -> player)
-}
-let state = State.state
+instance state_sig : State.sig = State.state_signature
+  [ "board"
+  ; "next turn" ]
+  (function
+  | "board"     -> board
+  | "next turn" -> player)
 
 open Quint.State
 open Quint.Rng.Ops
 
+let action = State.action #state_sig
+let read   = State.read #state_sig
+
+
 /// ACTIONS
 
-let move (p:player) (c:coord) : action [Board] = !@ (
-  let! b = !Board in
+let move (p:player) (c:coord) : action ["board"] = !@ (
+  let! b = !"board" in
   (  chk (is_empty b c)
-  &@ Board @= Map.put c p b
+  &@ "board" @= Map.put c p b
   )
 )
 
-let move_to_win (p:player) : nondet (action [Board]) = !? (
-  let! b = !Board in
+let move_to_win (p:player) : nondet (action ["board"]) = !? (
+  let! b = !"board" in
   let? copt = winning_move_for_player p b in
   match copt with
   | Some c -> move p c
   | None   -> fail
 )
 
-let move_to_block (p:player) : nondet (action [Board]) = !? (
-  let! b = !Board in
+let move_to_block (p:player) : nondet (action ["board"]) = !? (
+  let! b = !"board" in
   let? copt = blocking_move_for_player p b in
   match copt with
   | Some c -> move p c
@@ -176,50 +193,50 @@ let move_to_block (p:player) : nondet (action [Board]) = !? (
 
 // NOTE: The mode annotation can be inferred
 let move_to_center (p:player) = !@ (
-  let! b = !Board in
+  let! b = !"board" in
   (  chk (board_is_empty b)
   &@ move p (2, 2))
 )
 
-let move_to_set_up_win (p:player) : nondet (action [Board]) = !? (
-  let! b = !Board in
+let move_to_set_up_win (p:player) : nondet (action ["board"]) = !? (
+  let! b = !"board" in
   let? copt = set_up_win_for_player p b in
   match copt with
   | Some c -> move p c
   | None   -> fail
 )
 
-let move_to_empty (p:player) : nondet (action [Board]) = !? (
-  let! b = !Board in
+let move_to_empty (p:player) : nondet (action ["board"]) = !? (
+  let! b = !"board" in
   match? free_space p b with
   | Some c -> move p c
   | None   -> fail
 )
 
-let move_to_corner (p:player) : nondet (action [Board]) = !? (
-  let! b = !Board in
+let move_to_corner (p:player) : nondet (action ["board"]) = !? (
+  let _ = debug "@ TRYING move_to_corner" in
+  let! b = !"board" in
   let? corner = one_of corners in
   (  chk (board_is_empty b)
   &@ move p corner)
 )
 
-let next_turn : action [Next_turn] = !@ (
-  let! b = !Board
-  and! p = !Next_turn
+let next_turn : action ["next turn"] = !@ (
+  let! b = !"board"
+  and! p = !"next turn"
   in
   (  chk (not (board_is_full b))
   &@ (if p = X then
-        Next_turn @= O
+        "next turn" @= O
       else
-        Next_turn @= X)
+        "next turn" @= X)
   )
 )
 
 // TODO Need to integrate nondet within action state
-let move_player (p:player) : nondet (action [Board; Next_turn]) = !? (
-  let! b = !Board
-  and! p' = !Next_turn
-  in
+let move_player (p:player) : nondet (action ["board"; "next turn"]) = !? (
+  let! b = !"board" in
+  let _ = debug ("@ READ BOARD " ^ player_to_string p) in
   // TODO This can be removed by integrating nondet as an effect alongside reads and updates
   let? corner = move_to_corner p
   and? win = move_to_win p
@@ -227,14 +244,61 @@ let move_player (p:player) : nondet (action [Board; Next_turn]) = !? (
   and? set_up_win = move_to_set_up_win p
   and? empty = move_to_empty p
   in
-  (  chk (p = p')
-  &@ chk (not (game_over b))
-  &@ next_turn
+  (  chk (not (game_over b))
   &@ (  corner
      |@ win
      |@ block
      |@ move_to_center p
      |@ set_up_win
      |@ empty )
-  )
+  &@ next_turn
+  &@ chk (debug ("@ MOVED " ^ player_to_string p)))
+)
+
+let step : nondet transition = !? (
+  let! p = !"next turn" in
+  let? move = move_player p
+  in
+  move
+)
+
+let init_f : State.init_t #state_sig  = function
+  | "board"     -> Map.empty #coord #player
+  | "next turn" -> X
+
+module List = FStar.List.Tot
+
+module DM = FStar.DependentMap
+
+let pos_to_string : option player -> string = function
+  | Some p -> player_to_string p
+  | None   -> " "
+
+let rec aux (m:board) : l:list coord -> Tot (string) (decreases l) = function
+  | [] -> ""
+  | xy0 :: xy1 :: xy2 :: rest ->
+    "" ^ pos_to_string (Map.get xy0 m) ^ "|" ^ pos_to_string (Map.get xy1 m) ^ "|" ^ pos_to_string (Map.get xy2 m) ^ "" ^ "\n-----\n" ^ aux m rest
+  | _ ::  [] -> ""
+  | _ :: _ :: [] -> ""
+
+// TODO: Print functions for board
+let board_to_string : board -> string =
+  fun m ->
+  "\n-----\n" ^
+  aux m board_coordinates.ls
+
+let state_to_string : s:state #state_sig{is_updated s} -> string =
+  fun s ->
+  "board:\n" ^
+  board_to_string (Some?.v (DM.sel s "board"))
+  ^ "\nnext player: " ^ player_to_string (Some?.v (DM.sel s "next turn")) ^ "\n"
+
+
+
+let debug_trace steps seed =
+  let trace = State.run steps init_f step seed in
+  List.fold_left (fun acc s -> acc ^ "\n=========\n" ^ state_to_string s) "" trace
+
+let _ex_run_1  = normalize_term (
+  debug_trace 1 0
 )

@@ -1,5 +1,5 @@
 (executable
  (name main)
  (modes js)
- (libraries um_quint js_of_ocaml-lwt)
+ (libraries quint_ml fstar.lib js_of_ocaml-lwt)
  (preprocess (pps js_of_ocaml-ppx)))

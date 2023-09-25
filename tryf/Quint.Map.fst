@@ -2,13 +2,16 @@ module Quint.Map
 
 open FStar.Order
 open Quint.Ordered
+open Quint.Show
+module List = FStar.List.Tot
+
 module Set = Quint.Set
 let set #a {| ordered a |} (l: list a) = Set.set l
 
-type entry k v = (k * v)
+type entry k_t v_t = | E : k:k_t -> v:v_t -> entry k_t v_t
 
 instance ordered_entry #k #v {| ordered k |} : ordered (entry k v) = {
-  compare = (fun (k1, _) (k2, _) -> compare k1 k2)
+  compare = (fun x y -> compare x.k y.k)
 }
 
 // A map is implemented as an (ordered) set where is equality is defined only by
@@ -23,12 +26,51 @@ let empty
 let put
   #k #v {|ordered k |}
   : k -> v -> t k v ->  t k v
-  = fun key value m -> Set.add (key, value) m
+  = fun key value m -> Set.add (E key value) m
 
 let get
   #k #v {| ordered k |}
   : k -> t k v -> option v
   = fun key (Set.Set s) ->
-    match FStar.List.Tot.find (fun (key', _) -> compare key' key = Eq) s with
-    | Some (_, v) -> Some v
+    match FStar.List.Tot.find (fun x -> compare x.k key = Eq) s with
+    | Some y -> Some y.v
     | None -> None
+
+let v
+  #k #v {| ordered k|}
+  (l:list (k * v))
+  : t k v
+  = Set.set (List.map (fun (k, v) -> E k v) l)
+
+let to_list #k #v
+  (m:t k v)
+  : list (k * v)
+  = List.map (fun x -> (x.k, x.v)) m.ls
+
+let _ex_v = assert_norm (
+  compare
+    (to_list (v [(0, 0), "0,0"; (0, 1), "0,1"; (0, 2), "0,2"]))
+    [(0, 0), "0,0"; (0, 1), "0,1"; (0, 2), "0,2"]
+  = Eq
+)
+
+let _ex_get = assert_norm (
+  get (0, 1) (v [(0, 0), "0,0"; (0, 1), "0,1"; (0, 2), "0,2"])
+  =
+  Some "0,1"
+)
+
+let rec string_of_map_aux
+  #k #v {|show k|} {|show v|}
+  : list (k * v) -> string
+  = function
+  | [] -> ")"
+  | (k', v') :: xs ->
+    to_string k' ^ " -> " ^ to_string v' ^ ", " ^ string_of_map_aux xs
+
+let string_of_map #k #v {|show k|} {|show v|} (m:t k v): string =
+  "Map(" ^ string_of_map_aux (to_list m)
+
+instance show_map #k #v {|show k|} {|show v|} : show (t k v) = {
+  to_string = string_of_map
+}
