@@ -10,7 +10,7 @@ Everything in here is very rough and a WIP.
 - [[./tryf/]] :: An EDSL aiming to capture the pure and action fragments of quint in F*.
   - See the example in [[./tryf/Quint.Ex.TicTacToe.fst]] for an example of how this
     EDSL can be used.
-- ./bin/main.ml :: Entrypoint for a CLI that runs the
+- [[./bin/main.ml]] :: Entrypoint for a CLI that runs the
   [[./tryf/Quint.Ex.TicTacToe.fst]] example. This shows how we can integrate the
   code compiled from F* with normal ocaml code.
 - [[./test/quint-ml-demo.t]] :: Blackbox CLI tests showing invocation of the CLI.
