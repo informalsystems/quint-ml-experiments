@@ -1,20 +1,20 @@
 #+title: Notes
 * Tasks
-** TODO Shallow embedding of functional fragment
-*** TODO Terms and types
+** DONE Shallow embedding of functional fragment
+*** DONE Terms and types
 - [x] Ints
 - [x] Strings
 - [x] Sets
 - [x] Maps
-*** TODO Type checking
-*** TODO Evaluation
-** TODO Shallow embedding of stateful fragment
-*** TODO Terms and types
-- [ ] State vars
-- [ ] Actions
-*** TODO Type checking
-*** TODO Effect checking
-*** TODO Evaluation
+*** DONE Type checking
+*** DONE Evaluation
+** DONE Shallow embedding of stateful fragment
+*** DONE Terms and types
+- [X] State vars
+- [X] Actions
+*** DONE Type checking
+*** DONE Effect checking
+*** DONE Evaluation
 * PI Week 2023
 ** Goals
 *** Shallow embedding of a fragment of quint
@@ -64,33 +64,60 @@
 ** Influences and prior art
 ** What got done
 *** State spaces as dependent maps
+
 #+begin_src fstar
-type map k v = | Map : key -> value:(key -> Type) -> map key value
+type map k v = | Map : key:k -> value_type:(key -> Type) -> map k v
 #+end_src
+
+We use this in two ways:
+
+- It gives a light weight way of working with state variables of different
+  types, without having to wrap all the values in an enum.
+- Internally we use a map into optional values to give static checks of legal
+  updates (see the next section).
 *** Legal updates are enforced statically
-- Trying to update the same variable twice is a type error
+
+- Trying to update the same variable twice is a type error :: [[./tryf/Quint.State.fst::130]]
 - Trying to read from a non-updated variable is a type error
 - Trying to update in a read effect is a type error
+
 *** Read effect is modeled as an applicative functor
+[[./tryf/Quint.State.fst::233]]
+
+This doesn't need to be monadic, since you cannot change the context in the
+sequenced computation.
+
 *** Action effect is modeled as monadic functor
-- But don't need bind, since we are only dealing with boolean values
+[[./tryf/Quint.State.fst::301]]
+
+But we don't actually need bind, since we are only dealing with boolean values.
+I'm not entirely sure what to call this :)
+
 *** Nondet effect is modeled as an applicative functor
+Again, since we don't need to allow modifying the context, this needn't be
+monadic.
 *** RNG library ported from the quint impl
+[[./tryf/Quint.Rng.Internal.fst]]
 *** A naive type-class based set library allowing light weight operations over nested sets
 *** A naive type-class based non-dependent map library allowing light weight operations over nested maps
 
 ** Possibilities for future
 *** State spaces as *monotonic* dependent maps
-Allows a monotonic property over the evolution of the state.
+Allows a monotonic property over the evolution of the state. This would allow
+leveraging https://www.fstar-lang.org/papers/monotonicity/ to put reasoning about
+properties of traces in the types.
 *** Replace monadic interface with effect handlers
 This will allow reading from state variables without using the binding
-constructs.
+constructs, and without requiring combining 3 different functors. I.e., all the
+noise from the operator like =!?= and =!@= and =let?= etc. should go away.
+*** Provide alternative handlers for the effects
+This would allow providing multiple different executions of the effects, one of
+which would run the simulation while other would provide an interface for
+imlemenentations:
 
-
-* Misc
-** Quint advantages
-- Really easy construction and formation of sets
-- Static detection of variable updates is very slick
-  - We need a type like ='status state= where ='status= is only =updated= after
-    every variable is =updated= where each action requires its variables to be
-    =not_updated= before access and unsures they are =updated= after.
+| Effect              | Simulation                              | Implementation                |
+|---------------------+-----------------------------------------+-------------------------------|
+| nondet              | RNG or backtracking                     | Input                         |
+| Disjunctive Actions | nondet choice using RNG or backtracking | Concurrent "select"/"race"    |
+| Conjunctive Actions | -                                       | Concurrent join               |
+| Temporal            | TODO                                    | Supervisors/monitor processes |

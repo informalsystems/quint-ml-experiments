@@ -5,10 +5,15 @@ MLs [[https://en.wikipedia.org/wiki/OCaml][OCaml]] and [[https://www.fstar-lang.
 
 Everything in here is very rough and a WIP.
 
-* Contents
+* Contents Worth Remarking
 
-- [[./tryf/]] :: A EDSL aiming to capture a fragment of quint in F*.
-- [[./lib]] :: Sketch towards a shallow embedding of Quint in OCaml. It only
-  holds a GADT of terms.
-- [[./bin/main.ml]] :: A sketch of an OCaml approach to a toy quint spec.
-- [[./notes.org]] :: Notes on the project
+- [[./tryf/]] :: An EDSL aiming to capture the pure and action fragments of quint in F*.
+  - See the example in [[./tryf/Quint.Ex.TicTacToe.fst]] for an example of how this
+    EDSL can be used.
+- ./bin/main.ml :: Entrypoint for a CLI that runs the
+  [[./tryf/Quint.Ex.TicTacToe.fst]] example. This shows how we can integrate the
+  code compiled from F* with normal ocaml code.
+- [[./test/quint-ml-demo.t]] :: Blackbox CLI tests showing invocation of the CLI.
+- [[./notes.org]] :: Working notes on the project
+- [[./bin/ocaml_ttt_ex_main.ml]] :: A sketch of an OCaml approach to a toy quint
+  spec. This was a prelude to the F* code.

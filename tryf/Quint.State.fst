@@ -445,31 +445,8 @@ let string_of_state_value
   to_string v ^ " -> " ^ to_string u
 
 
-// TODO: way to convert state values to string
-// let rec state_to_string
-//   {|sig|} (#v:var_t) {|show var_t|} {|show (types v)|}
-//   : (list (dtuple2 var_t types)) -> string
-//   = function
-//   | [] -> ""
-//   | (| a, b |) :: rest -> string_of_state_value a b ^ "\n" ^ state_to_string rest
 
-// let rec trace_to_string {|sig|} : trace_t -> string
-//   = function
-//   | [] -> ""
-//   | s :: ss -> state_to_string s ^ "\n---------\n" ^ trace_to_string ss
-
-// let run_debug {|sg:sig|}
-//   (n_steps:nat)
-//   (i:init_t)
-//   (nt:nondet (transition #sg #vars))
-//   (seed: nat)
-//   : string
-//   =
-//   trace_to_string (trace (run n_steps i nt seed))
-
-// instance show_trace {|sig|} : show (trace_t) = {
-//    to_string = trace_to_string
-// }
+/// EXAMPLES
 
 let _ex_read_v : read ["v"] int =
   let! v = !"v" in
