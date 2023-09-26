@@ -60,16 +60,13 @@ let _ex_get = assert_norm (
   Some "0,1"
 )
 
-let rec string_of_map_aux
-  #k #v {|show k|} {|show v|}
-  : list (k * v) -> string
-  = function
-  | [] -> ")"
-  | (k', v') :: xs ->
-    to_string k' ^ " -> " ^ to_string v' ^ ", " ^ string_of_map_aux xs
-
 let string_of_map #k #v {|show k|} {|show v|} (m:t k v): string =
-  "Map(" ^ string_of_map_aux (to_list m)
+  let rec aux = function
+    | [] -> ")"
+    | (k', v') :: xs ->
+      to_string k' ^ " -> " ^ to_string v' ^ ", " ^ aux xs
+  in
+  "Map(" ^ aux (to_list m)
 
 instance show_map #k #v {|show k|} {|show v|} : show (t k v) = {
   to_string = string_of_map

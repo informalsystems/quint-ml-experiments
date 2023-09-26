@@ -1,3 +1,4 @@
+/// An adaptation of https://github.com/informalsystems/quint/blob/main/examples/puzzles/tictactoe/tictactoe.qnt
 module Quint.Ex.TicTacToe
 
 open FStar.Order
@@ -11,16 +12,9 @@ module IO = FStar.IO
 
 open Quint.Util
 
+// Just a helper to expose the set constructor
 let set #a {| ordered a |} (l: list a): s:Set.t a{Set.preserves_nonempty l s.ls} = Set.set l
 
-let print_debug = true
-
-let debug msg =
-  if print_debug then
-    let _ = IO.debug_print_string (msg ^ "\n") in
-    true
-  else
-    true
 
 
 /// DATA
@@ -28,7 +22,6 @@ let debug msg =
 type player =
   | O
   | X
-
 
 let player_to_string : player -> string = function
   | X -> "X"
@@ -112,6 +105,10 @@ let x_can_block (b:board) = winning_patterns |> Set.for_some (x_can_block_with_p
 let can_take_center (b:board) = is_empty b (2,2)
 let x_can_set_up_win (b:board) = winning_patterns |> Set.for_some (x_can_set_up_win_with_pattern b)
 
+
+
+/// NONDET FUNCTIONS
+
 open Quint.Rng.Ops
 
 let winning_move_for_player (p:player) (b:board) : State.nondet (option( c:coord{is_empty b c})) =
@@ -150,11 +147,14 @@ let free_space (p:player) (b:board) : State.nondet (option coord) =
     return None
 
 
+
 /// STATE
 
 instance state_sig : State.sig = State.state_signature
+  /// State variables
   [ "board"
   ; "next turn" ]
+  /// State variable types
   (function
   | "board"     -> board
   | "next turn" -> player)
@@ -162,16 +162,20 @@ instance state_sig : State.sig = State.state_signature
 open Quint.State
 open Quint.Rng.Ops
 
+// Short hands for read and action annotations
 let action = State.action #state_sig
 let read   = State.read #state_sig
+
 
 
 /// ACTIONS
 
 let move (p:player) (c:coord) : action ["board"] = !@ (
+  // Read a state variable
   let! b = !"board" in
-  (  chk (is_empty b c)
-  &@ "board" @= Map.put c p b
+  // Perform an action
+  (  chk (is_empty b c)        // Check a pure boolean molds
+  &@ "board" @= Map.put c p b  // Update the "board" state variable
   )
 )
 
@@ -214,7 +218,6 @@ let move_to_empty (p:player) : nondet (action ["board"]) = !? (
 )
 
 let move_to_corner (p:player) : nondet (action ["board"]) = !? (
-  let _ = debug "@ TRYING move_to_corner" in
   let! b = !"board" in
   let? corner = one_of corners in
   (  chk (board_is_empty b)
@@ -236,7 +239,6 @@ let next_turn : action ["next turn"] = !@ (
 // TODO Need to integrate nondet within action state
 let move_player (p:player) : nondet (action ["board"; "next turn"]) = !? (
   let! b = !"board" in
-  let _ = debug ("@ READ BOARD " ^ player_to_string p) in
   // TODO This can be removed by integrating nondet as an effect alongside reads and updates
   let? corner = move_to_corner p
   and? win = move_to_win p
@@ -251,8 +253,7 @@ let move_player (p:player) : nondet (action ["board"; "next turn"]) = !? (
      |@ move_to_center p
      |@ set_up_win
      |@ empty )
-  &@ next_turn
-  &@ chk (debug ("@ MOVED " ^ player_to_string p)))
+  &@ next_turn)
 )
 
 let step : nondet transition = !? (
@@ -262,9 +263,13 @@ let step : nondet transition = !? (
   move
 )
 
-let init_f : State.init_t #state_sig  = function
+let init : State.init_t #state_sig  = function
   | "board"     -> Map.empty #coord #player
   | "next turn" -> X
+
+
+
+// Utilities for running and printing the compiled executable
 
 module List = FStar.List.Tot
 
@@ -293,12 +298,52 @@ let state_to_string : s:state #state_sig{is_updated s} -> string =
   board_to_string (Some?.v (DM.sel s "board"))
   ^ "\nnext player: " ^ player_to_string (Some?.v (DM.sel s "next turn")) ^ "\n"
 
-
-
 let debug_trace steps seed =
-  let trace = State.run steps init_f step seed in
+  let trace = State.run steps init step seed in
   List.fold_left (fun acc s -> acc ^ "\n=========\n" ^ state_to_string s) "" trace
 
+
+
+// Example of an inline test of a trace using a give seed (0)
 let _ex_run_1  = normalize_term (
-  debug_trace 1 0
+  debug_trace 2 0
+  =
+  "=========
+board:
+
+-----
+ | |
+-----
+ | |
+-----
+ | |
+-----
+
+next player: X
+
+=========
+board:
+
+-----
+X| |
+-----
+ | |
+-----
+ | |
+-----
+
+next player: O
+
+=========
+board:
+
+-----
+X|O|
+-----
+ | |
+-----
+ | |
+-----
+
+next player: X"
 )

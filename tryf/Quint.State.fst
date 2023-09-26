@@ -404,14 +404,11 @@ let rec run_aux {|s:sig|}
   = function
   | 0 -> return [s0]
   | n ->
-    let _ = IO.debug_print_string ("@ RUNNING STATE " ^ Prims.string_of_int n ^ "\n") in
     apply nt s0 >>= (function
   | None    ->
-    let _ = IO.debug_print_string ("@ DEADLOCK\n") in
     // Report the last state run
     return [s0]
   | Some s1' ->
-    let _ = IO.debug_print_string ("@ STATE SUCEEDED\n") in
     let? states = run_aux nt s1' (n - 1) in
     s0 :: states)
 
