@@ -25,24 +25,6 @@
 - State vars
 - Actions
 
-**** Semantics
-
-***** Use NBE?
-- https://www.pls-lab.org/en/Normalization_by_Evaluation
-***** Support classical logic or just intuitionistic?
-- https://www.pls-lab.org/en/Classical_Curry-Howard
-- https://hal.science/inria-00371959/
-***** Just intuitionistic logic
-- https://arxiv.org/pdf/1910.00907.pdf
-- https://www.dcs.gla.ac.uk/~pmaier/papers/Maier_CSL2004_XT.pdf
-- http://www.ioc.ee/%7Ewolfgang/research/eflm-2015-slides.pdf
-****** Functional reactive system
-- The Curry–Howard Correspondence between Temporal Logic and Functional Reactive
-  Programming :: https://kodu.ut.ee/~varmo/tday-nelijarve/jeltsch-slides.pdf
-- Temporal Logic with “Until”, Functional Reactive Programming with Processes,
-  and Concrete Process Categories ::
-  https://www.ioc.ee/~wolfgang/research/plpv-2013-paper.pdf
-
 ** Stretch
 
 *** Compile to QuintIR
@@ -54,14 +36,7 @@
 - Tuples :: Special case of Records
 - Records :: Probably can use DependantMap
 
-** Directions for future work
-*** F*
-- Take advantage of its dependant typing
-*** Rust
-- Close gap to impl
-
 * Presentation/write up
-** Influences and prior art
 ** What got done
 *** State spaces as dependent maps
 
@@ -121,3 +96,20 @@ imlemenentations:
 | Disjunctive Actions | nondet choice using RNG or backtracking | Concurrent "select"/"race"    |
 | Conjunctive Actions | -                                       | Concurrent join               |
 | Temporal            | TODO                                    | Supervisors/monitor processes |
+
+*** Formalize semantics
+**** NBE
+- https://www.pls-lab.org/en/Normalization_by_Evaluation
+**** Support classical logic or just intuitionistic?
+- https://www.pls-lab.org/en/Classical_Curry-Howard
+- https://hal.science/inria-00371959/
+**** intuitionistic logic
+- https://arxiv.org/pdf/1910.00907.pdf
+- https://www.dcs.gla.ac.uk/~pmaier/papers/Maier_CSL2004_XT.pdf
+- http://www.ioc.ee/%7Ewolfgang/research/eflm-2015-slides.pdf
+**** Functional reactive system
+- The Curry–Howard Correspondence between Temporal Logic and Functional Reactive
+  Programming :: https://kodu.ut.ee/~varmo/tday-nelijarve/jeltsch-slides.pdf
+- Temporal Logic with “Until”, Functional Reactive Programming with Processes,
+  and Concrete Process Categories ::
+  https://www.ioc.ee/~wolfgang/research/plpv-2013-paper.pdf
