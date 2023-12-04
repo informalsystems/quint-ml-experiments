@@ -10,7 +10,7 @@ bug-reports: "https://github.com/shonfeder/um_quint/issues"
 depends: [
   "dune" {>= "2.9" & > "2.9"}
   "ocaml" {= "4.14.0"}
-  "fstar" {= "2023.04.15~dev"}
+  "fstar"
   "containers"
   "ppx_deriving"
   "lwt"

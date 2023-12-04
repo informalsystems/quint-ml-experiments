@@ -17,7 +17,8 @@
 
   (ocaml (= 4.14.0))
 
-  (fstar (= 2023.04.15~dev))
+   ;  Pinned to dev version in lock file
+  fstar
 
    ; stdlib extensions and utilities
   containers
