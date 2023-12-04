@@ -32,7 +32,10 @@ jobs:
         uses: ocaml/setup-ocaml@v2
         with:
           ocaml-compiler: ${{ matrix.ocaml-compiler }}
-          opam-disable-sandboxing: true
+          # opam-disable-sandboxing: true
+          # Since we pin fstar, which installs depext, we need to wait
+          # for depext until we install locked
+          opam-depext: false
 
       - run: opam install . --deps-only --with-test --locked
 
