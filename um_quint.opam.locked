@@ -1,0 +1,92 @@
+opam-version: "2.0"
+name: "um_quint"
+version: "~dev"
+synopsis: "Short description"
+description: "Longer description"
+maintainer: "Shon Feder"
+authors: "Shon Feder"
+license: "MIT"
+homepage: "https://github.com/shonfeder/um_quint"
+bug-reports: "https://github.com/shonfeder/um_quint/issues"
+depends: [
+  "astring" {= "0.8.5" & with-doc}
+  "base-bigarray" {= "base"}
+  "base-bytes" {= "base"}
+  "base-threads" {= "base"}
+  "base-unix" {= "base"}
+  "batteries" {= "3.6.0"}
+  "camlp-streams" {= "5.0.1"}
+  "cmdliner" {= "1.1.1"}
+  "conf-c++" {= "1.0"}
+  "conf-gmp" {= "4"}
+  "conf-python-2-7" {= "1.2"}
+  "containers" {= "3.12"}
+  "cppo" {= "1.6.9"}
+  "csexp" {= "1.5.1"}
+  "dune" {= "3.7.0"}
+  "dune-configurator" {= "3.7.0"}
+  "either" {= "1.0.0"}
+  "fmt" {= "0.9.0" & with-doc}
+  "fpath" {= "0.7.3" & with-doc}
+  "fstar" {= "2023.04.15~dev"}
+  "gen" {= "1.0"}
+  "js_of_ocaml" {= "5.4.0"}
+  "js_of_ocaml-compiler" {= "5.4.0"}
+  "js_of_ocaml-lwt" {= "5.4.0"}
+  "js_of_ocaml-ppx" {= "5.4.0"}
+  "lwt" {= "5.6.1"}
+  "memtrace" {= "0.2.3"}
+  "menhir" {= "20220210"}
+  "menhirLib" {= "20220210"}
+  "menhirSdk" {= "20220210"}
+  "num" {= "1.4"}
+  "ocaml" {= "4.14.0"}
+  "ocaml-base-compiler" {= "4.14.0"}
+  "ocaml-compiler-libs" {= "v0.12.4"}
+  "ocaml-config" {= "2"}
+  "ocaml-options-vanilla" {= "1"}
+  "ocamlbuild" {= "0.14.2"}
+  "ocamlfind" {= "1.9.5"}
+  "ocplib-endian" {= "1.2"}
+  "odoc" {= "2.2.1" & with-doc}
+  "odoc-parser" {= "2.0.0" & with-doc}
+  "pprint" {= "20220103"}
+  "ppx_derivers" {= "1.2.1"}
+  "ppx_deriving" {= "5.2.1"}
+  "ppx_deriving_yojson" {= "3.7.0"}
+  "ppxlib" {= "0.30.0"}
+  "process" {= "0.2.1"}
+  "re" {= "1.10.4" & with-doc}
+  "result" {= "1.5"}
+  "sedlex" {= "3.2"}
+  "seq" {= "base"}
+  "sexplib0" {= "v0.16.0"}
+  "stdint" {= "0.7.2"}
+  "stdlib-shims" {= "0.3.0"}
+  "topkg" {= "1.0.7" & with-doc}
+  "tyxml" {= "4.5.0" & with-doc}
+  "uutf" {= "1.0.3" & with-doc}
+  "yojson" {= "2.0.2"}
+  "z3" {= "4.8.5"}
+  "zarith" {= "1.12"}
+]
+build: [
+  ["dune" "subst"] {dev}
+  [
+    "dune"
+    "build"
+    "-p"
+    name
+    "-j"
+    jobs
+    "--promote-install-files=false"
+    "@install"
+    "@runtest" {with-test}
+    "@doc" {with-doc}
+  ]
+  ["dune" "install" "-p" name "--create-install-files" name]
+]
+dev-repo: "git+https://github.com/shonfeder/um_quint.git"
+pin-depends: [
+  "fstar.2023.04.15~dev" "git+https://github.com/FStarLang/FStar"
+]
