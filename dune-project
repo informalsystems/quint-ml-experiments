@@ -15,7 +15,7 @@
  (depends
   (dune (> 2.9))
 
-  (ocaml (= 4.14.0))
+  (ocaml (= 4.14.1))
 
    ;  Pinned to dev version in lock file
   fstar
