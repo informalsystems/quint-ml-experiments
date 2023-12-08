@@ -27,7 +27,7 @@ Assuming you have [[https://opam.ocaml.org/doc/Install.html][opam]] installed:
 #+begin_src
 git clone git@github.com:informalsystems/quint-ml-experiments.git
 cd quint-ml-experiments
-opam switch create . --locked
+opam switch create . --deps-only --with-test --locked
 #+end_src
 
 ** Build
@@ -49,3 +49,9 @@ dune exec quint-ml-demo
 #+end_src
 
 See [[file:test/quint-ml-demo.t][the integration tests]] for more usage examples.
+
+* Installing from source
+
+#+begin_src
+opam pin add https://github.com/shonfeder/quint-ml-experiments.git --locked
+#+end_src
