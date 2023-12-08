@@ -327,6 +327,8 @@ let ( &@ ) {|sig|} #vs #vs'
 /// The alternation of actions
 val ( |@ ) {|sig|} #vs : action vs -> action vs -> action vs
 // TODO Add non-det
+// action vs -> action vs -> nondet (action vs)
+// Where we will use the rng to get a binary, and use that to select which action to run
 let ( |@ ) {|sig|} #vs (a1:action vs) (a2:action vs) : action vs  =
   fun s0 ->
   match a1 s0 with
@@ -351,16 +353,10 @@ let ( !? ) {|s:sig|} #rs #vs
     =
     fun rng_st ->
     let a : action vs = fun s0 ->
-      /// FIXME: We are not properly advancing the state here
       let a, _ = rnda s0 rng_st in
       a s0
     in
     (a, Rng.incr_state rng_st)
-
-// (
-//     // f)un rng s0 ->
-//     let nda = rnda s0 in
-//     nda rng
 
 open Quint.Ordered
 

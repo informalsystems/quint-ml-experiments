@@ -17,3 +17,35 @@ Everything in here is very rough and a WIP.
 - [[./notes.org]] :: Working notes on the project
 - [[./bin/ocaml_ttt_ex_main.ml]] :: A sketch of an OCaml approach to a toy quint
   spec. This was a prelude to the F* code.
+
+* Building for development
+
+Assuming you have [[https://opam.ocaml.org/doc/Install.html][opam]] installed:
+
+** Install dependencies
+
+#+begin_src
+git clone git@github.com:informalsystems/quint-ml-experiments.git
+cd quint-ml-experiments
+opam switch create . --locked
+#+end_src
+
+** Build
+
+#+begin_src
+dune build
+#+end_src
+
+** Test
+
+#+begin_src
+dune test
+#+end_src
+
+** Run the demo simulation
+
+#+begin_src
+dune exec quint-ml-demo
+#+end_src
+
+See [[file:test/quint-ml-demo.t][the integration tests]] for more usage examples.
