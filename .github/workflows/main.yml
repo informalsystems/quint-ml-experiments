@@ -1,0 +1,46 @@
+# Adapted from https://github.com/ocaml/setup-ocaml
+#
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches:
+      - trunk
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          # - macos-latest
+        ocaml-compiler:
+          - 4.14.1
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use OCaml ${{ matrix.ocaml-compiler }}
+        env:
+          # otherwise setup-ocaml pins non-locked dependencies
+          # https://github.com/ocaml/setup-ocaml/issues/166
+          # https://github.com/goblint/analyzer/pull/296/files
+          OPAMLOCKED: locked
+        uses: ocaml/setup-ocaml@v2
+        with:
+          ocaml-compiler: ${{ matrix.ocaml-compiler }}
+          # opam-disable-sandboxing: true
+          # Since we pin fstar, which installs depext, we need to wait
+          # for depext until we install locked
+          # opam-pin: false
+          opam-depext: false
+
+      - run: opam install . --locked --deps-only
+      - run: opam exec -- dune build
+      - run: opam exec -- dune install
+      - run: opam exec -- dune test

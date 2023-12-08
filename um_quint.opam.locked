@@ -1,0 +1,83 @@
+opam-version: "2.0"
+name: "um_quint"
+version: "~dev"
+synopsis: "Short description"
+description: "Longer description"
+maintainer: "Shon Feder"
+authors: "Shon Feder"
+license: "MIT"
+homepage: "https://github.com/shonfeder/um_quint"
+bug-reports: "https://github.com/shonfeder/um_quint/issues"
+depends: [
+  "base-bigarray" {= "base"}
+  "base-bytes" {= "base"}
+  "base-threads" {= "base"}
+  "base-unix" {= "base"}
+  "batteries" {= "3.7.1"}
+  "camlp-streams" {= "5.0.1"}
+  "cmdliner" {= "1.2.0"}
+  "conf-c++" {= "1.0"}
+  "conf-gmp" {= "4"}
+  "conf-python-3" {= "9.0.0"}
+  "containers" {= "3.12"}
+  "cppo" {= "1.6.9"}
+  "csexp" {= "1.5.2"}
+  "dune" {= "3.12.1"}
+  "dune-configurator" {= "3.12.1"}
+  "either" {= "1.0.0"}
+  "fstar" {= "2023.09.03~dev"}
+  "gen" {= "1.1"}
+  "js_of_ocaml" {= "5.4.0"}
+  "js_of_ocaml-compiler" {= "5.4.0"}
+  "js_of_ocaml-lwt" {= "5.4.0"}
+  "js_of_ocaml-ppx" {= "5.4.0"}
+  "lwt" {= "5.7.0"}
+  "memtrace" {= "0.2.3"}
+  "menhir" {= "20230608"}
+  "menhirLib" {= "20230608"}
+  "menhirSdk" {= "20230608"}
+  "num" {= "1.4"}
+  "ocaml" {= "4.14.1"}
+  "ocaml-base-compiler" {= "4.14.1"}
+  "ocaml-compiler-libs" {= "v0.12.4"}
+  "ocaml-config" {= "2"}
+  "ocaml-options-vanilla" {= "1"}
+  "ocamlbuild" {= "0.14.2"}
+  "ocamlfind" {= "1.9.6"}
+  "ocplib-endian" {= "1.2"}
+  "pprint" {= "20230830"}
+  "ppx_derivers" {= "1.2.1"}
+  "ppx_deriving" {= "5.2.1"}
+  "ppx_deriving_yojson" {= "3.7.0"}
+  "ppxlib" {= "0.31.0"}
+  "process" {= "0.2.1"}
+  "result" {= "1.5"}
+  "sedlex" {= "3.2"}
+  "seq" {= "base"}
+  "sexplib0" {= "v0.16.0"}
+  "stdint" {= "0.7.2"}
+  "stdlib-shims" {= "0.3.0"}
+  "yojson" {= "2.1.2"}
+  "z3" {= "4.8.5-1"}
+  "zarith" {= "1.13"}
+]
+build: [
+  ["dune" "subst"] {dev}
+  [
+    "dune"
+    "build"
+    "-p"
+    name
+    "-j"
+    jobs
+    "--promote-install-files=false"
+    "@install"
+    "@runtest" {with-test}
+    "@doc" {with-doc}
+  ]
+  ["dune" "install" "-p" name "--create-install-files" name]
+]
+dev-repo: "git+https://github.com/shonfeder/um_quint.git"
+pin-depends: [
+  "fstar.2023.09.03~dev" "git+https://github.com/shonfeder/FStar.git#pinnable"
+]

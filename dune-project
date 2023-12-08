@@ -15,9 +15,12 @@
  (depends
   (dune (> 2.9))
 
-  ocaml
+  (ocaml (= 4.14.1))
 
-  ; stdlib extensions and utilities
+   ;  Pinned to dev version in lock file
+  fstar
+
+   ; stdlib extensions and utilities
   containers
   ppx_deriving
 
