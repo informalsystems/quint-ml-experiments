@@ -40,6 +40,7 @@ jobs:
           # opam-pin: false
           opam-depext: false
 
-      - run: opam install . --with-test --locked
-
+      - run: opam install . --locked --deps-only
+      - run: opam exec -- dune build
+      - run: opam exec -- dune install
       - run: opam exec -- dune test
